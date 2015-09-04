@@ -3,15 +3,25 @@
 		<script src=https://teikn-js.googlecode.com/svn-history/r23/trunk/libraries/kinetic-v3.6.0.js></script>
 		<script>	
 			var hexagon = [];
-			var moves = 0;
+
 			var movesCounted = "ON";
+
+			var moves = 0;
 			var score = 0;
 			var scoreInitial = 300;
 			var scorePerMove = 10;
+
 			var colors = ["red", "orange", "gold", "darkgreen", "lightblue", "mediumblue", "purple", "black"];
 			var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
+
+			var shapesLayer = new Kinetic.Layer();
+			var messageLayer = new Kinetic.Layer();
+
+			var firstTurn = true;
+				
 			//new global var for AI: cluster
 			var cluster = [];
+			var NPC = false;
 
 //neural network
 /*			function train(iterations){
@@ -180,30 +190,31 @@
 				}
 			}
 			
+			function AINewGame(){
+				NPC = true;
+				NewGame();
+				randomFirstMove();
+			}
+			
 			function randomFirstMove(){
 				var randomHex = Math.floor(Math.random() * hexagon.length);
 				
-				for (var a = 0, h; h = hexagon[a]; a++) {
-					NewGame().simulateMouseDown(h);   
-				}
-				
-				randomNextMove();
+				simulateMouseDown(hexagon[randomHex]);   
 			}
 			
 			function randomNextMove(){
-			
 				var randomColor = Math.floor(Math.random() * 7);
-				var repeat = true;
+				//var repeat = true;
 				
-				while (repeat == true){
-					repeat = false;
+				//while (repeat == true){
+				//	repeat = false;
 					for (var a = 0, h; h = hexagon[a]; a++) {
 						if (h.hexagonColor == colors[randomColor]){
-							NewGame().simulateMouseDown(h);
-							repeat = true;
+							simulateMouseDown(h);
+				//			repeat = true;
 						}
 					}
-				}
+				//}
 			}
 //end neural network
 	
@@ -306,9 +317,6 @@
 				var halfHexagonX = hexSideLength * Math.sin(hexAngleX);
 				var halfHexagonY = hexSideLength * Math.cos(hexAngleY) + hexSideLength;
 				var stage = new Kinetic.Stage("container", halfHexagonX * (gridSize + 1) * 2, halfHexagonY * (gridSize + 1));
-				var shapesLayer = new Kinetic.Layer();
-				var messageLayer = new Kinetic.Layer();
-				var firstTurn = true;
 				var img;
 
 				var e = document.getElementById("container");
@@ -467,84 +475,24 @@
 								//this function funnels both human and computer actions
 								simulateMouseOver(this);
 							});
-							
-							function simulateMouseOver(h) {
-								document.body.style.cursor = "pointer";
-										
-								if (h.hexagonOn != "OFF") {
-									var repeat = true;
-									
-									while (repeat == true) {
-										repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
-									}
-								}
-								
-								shapesLayer.draw();				
-							}
-						
+					
 							//attach a 'on mouse out event' to each hexagon object
 							hexagon[m * gridSize + n].on("mouseout", function(){
 								//this function funnels both human and computer actions
 								simulateMouseOut(this);
 							});
-							
-							function simulateMouseOut(h) {
-								document.body.style.cursor = "default";
-											
-								//if (this.hexagonHover != "OFF") {
-								var repeat = true;
-								
-								while (repeat == true) {
-									repeat = eliminateHexes(h.hexagonOrigColor, "OUT");	
-								} 
-								//}                       	
-								
-								shapesLayer.draw();
-							}
 													
 							//attach a 'on mouse down event' to each hexagon object
 							hexagon[m * gridSize + n].on("mousedown", function(){
 								//this function funnels both human and computer actions
 								simulateMouseDown(this);
 							});
-							
-							function simulateMouseDown(h) {
-								if (firstTurn == true) {
-									h.hexagonColor = "black";
-									h.hexagonOn = "OFF";
-									firstTurn = false;
-								}                            
-											
-								//writeMessage(messageLayer, hexagon.indexOf(this));
-											
-								movesCounted = "OFF";
-							
-								var repeat = true;
-							
-								while (repeat == true) {
-									repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
-								}
-							
-								var movesHTML = "Moves: " + moves;					
-								var scoreHTML = "Score: " + score;
-							
-								document.getElementById("moves").innerHTML=movesHTML;
-								document.getElementById("score").innerHTML=scoreHTML;
-
-								shapesLayer.draw();
-							}
 										
 							//attach a 'on mouse up event' to each hexagon object
 							hexagon[m * gridSize + n].on("mouseup", function(){
 								//this function funnels both human and computer actions
 								simulateMouseUp();
 							});
-							
-							//function that allows both human clicks and simulated clicks
-							function simulateMouseUp() {
-								//call redraw of the entire canvas on mouse up
-								shapesLayer.draw();
-							}
 							 
 							//add current hexagon to the drawing canvas's shapes layer
 							shapesLayer.add(hexagon[m * gridSize + n]);
@@ -554,8 +502,82 @@
 				stage.add(shapesLayer);
 				stage.add(messageLayer);  
 				
-				randomFirstMove(); 
+				//randomFirstMove(); 
 			}
+			
+			
+			function simulateMouseOver(h) {
+				if (NPC) {
+					//
+				} else {
+					document.body.style.cursor = "pointer";
+					
+					if (h.hexagonOn != "OFF") {
+						var repeat = true;
+				
+						while (repeat == true) {
+							repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
+						}
+					}
+			
+					shapesLayer.draw();	
+				}			
+			}
+							
+			function simulateMouseOut(h) {
+				if (NPC) {								
+					//
+				} else {
+					document.body.style.cursor = "default";
+							
+					//if (this.hexagonHover != "OFF") {
+					var repeat = true;
+				
+					while (repeat == true) {
+						repeat = eliminateHexes(h.hexagonOrigColor, "OUT");	
+					} 
+					//}                       	
+				
+					shapesLayer.draw();
+				}
+			}
+			
+			function simulateMouseDown(h) {
+				if (firstTurn == true) {
+					h.hexagonColor = "black";
+					h.hexagonOn = "OFF";
+					firstTurn = false;
+				}                            
+							
+				//writeMessage(messageLayer, hexagon.indexOf(this));
+							
+				movesCounted = "OFF";
+			
+				var repeat = true;
+			
+				while (repeat == true) {
+					repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
+				}
+			
+				var movesHTML = "Moves: " + moves;					
+				var scoreHTML = "Score: " + score;
+			
+				document.getElementById("moves").innerHTML=movesHTML;
+				document.getElementById("score").innerHTML=scoreHTML;
+
+				shapesLayer.draw();
+			}
+			
+			//function that allows both human clicks and simulated clicks
+			function simulateMouseUp() {
+				//call redraw of the entire canvas on mouse up
+				if (NPC) {								
+					randomNextMove();
+				}
+				
+				shapesLayer.draw();
+			}
+			
 		</script>
 		<style type="text/css"></style>
 	</head>
@@ -600,7 +622,8 @@
 								<input type="text" name="txtGridSize" id="txtGridSizeID" value="20" />
 								Hex Size:
 								<input type="text" name="txtHexSize" id="txtHexSizeID" value="15" />
-								<button onclick="NewGame();">Launch</button>
+								<button onclick="NewGame();">Human</button>
+								<button onclick="AINewGame();">AI</button>
 							</span>
 						</font>
 					</p>
