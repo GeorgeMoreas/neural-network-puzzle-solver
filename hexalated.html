@@ -8,10 +8,13 @@
 			var score = 0;
 			var scoreInitial = 300;
 			var scorePerMove = 10;
+			var colors = ["red", "orange", "gold", "darkgreen", "lightblue", "mediumblue", "purple", "black"];
+			var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
+			//new global var for AI: cluster
+			var cluster = [];
 
 //neural network
-
-			function train(iterations){
+/*			function train(iterations){
 			var X = np.array([ [0,0,1],[0,1,1],[1,0,1],[1,1,1] ]);
 			var y = np.array([[0,1,1,0]]).T;
 			var syn0 = 2*np.random.random((3,4)) - 1;
@@ -24,29 +27,39 @@
 				syn1 += l1.T.dot(l2_delta)
 				syn0 += X.T.dot(l1_delta)
 			}
-
-			function get_number_of_color_remaining(vOrigColor){
+*/
+			//  input: color
+			// output: total amount of that color remaining on the board
+			function get_number_of_color_remaining(cColor){
+				var count = 0;
 			
+				for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
+					if (cHexagon.hexagonColor == cColor) {
+						count++;
+					}
+				}
+				return count;
 			}
 
-			function get_number_of_color_affected(vOrigColor){
+			//  input: color
+			// output: total amount of that color affected if this color is clicked next
+			function get_number_of_color_affected(cColor){
 				var count = 0;
+				var repeat = true;
 				
-				while repaet = true {
+				while (repeat == true) {
+					repeat = false;
 					for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
 						if (blackHexagon.hexagonOn == "OFF" || blackHexagon.hexagonOn == "OFF_temp") {
 							for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 								var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
-									if (cHexagon.hexagonColor == vOrigColor) {
-										if ((cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-										(cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset) ||
-										(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX - 1) ||
-										(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX + 1) ||
-										(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-										(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset)) {
-											cHexagon.hexagonOn = "OFF_temp";
-											count++;
-										}
+								if (cHexagon.hexagonColor == cColor) {
+									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
+										//set hex to OFF temporarily, to simulate this hex being eliminated
+										//to calculate a chain reaction
+										cHexagon.hexagonOn = "OFF_temp";
+										count++;
+										repeat = true;
 									}
 								}
 							}
@@ -54,66 +67,157 @@
 					}
 				}
 				
-				while repaet = true {
-					for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
-						if (blackHexagon.hexagonOn == "OFF_temp") {
-							blackHexagon.hexagonOn = "ON";
-						}
+				//return all hexes temporarily set to OFF back to ON
+				for (var a = 0, cHexagon; cHexagon = hexagon[a]; a++) {
+					if (cHexagon.hexagonOn == "OFF_temp") {
+						cHexagon.hexagonOn = "ON";
 					}
 				}
 				
 				return count;
 			}
 
-			function get_average_hexes_per_cluster(){
-
-			}
-
-			function get_affected_coords(){
+			//  input: color
+			// output: set of coordinates of the affected area is this color is clicked on next
+			function get_affected_coords(cColor){
 				var coords = [ , ];
+				var repeat = true;
 				
-				while repaet = true {
+				while (repeat == true) {
+					repeat = false;
 					for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
 						if (blackHexagon.hexagonOn == "OFF") {
 							for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 								var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
-									if (cHexagon.hexagonColor == vOrigColor) {
-										if ((cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-										(cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset) ||
-										(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX - 1) ||
-										(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX + 1) ||
-										(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-										(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset)) {
-											coords.append(cHexagon.coordx, cHexagon.coordY);
-										}
+								if (cHexagon.hexagonColor == cColor) {
+									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
+										coords.append(cHexagon.coordx, cHexagon.coordY);
+										repeat = true;
 									}
 								}
 							}
 						}
 					}
 				}
-				
 				return coords;
 			}
 
-			function get_affected_center(){
+			//  input: color
+			// output: average center coordinates of the affected area is this color is clicked on next
+			function get_affected_center(cColor){
+				var coords = get_affected_coords(cColor);
+				var avg_coords = [2];
+				
+				var x_min = 10000;
+				var x_max = 0;
+				var y_min = 10000;
+				var y_max = 0;
+				var x_avg = 0;
+				var y_avg = 0;
+				
+				for (var a = 0, cHexagon; cHexagon = hexagon[a]; a++) {
+					if (cHexagon.coordX < x_min) {
+						x_min = cHegaxon.coordX;
+					}
+					if (cHexagon.coordX > x_max) {
+						x_min = cHegaxon.coordX;
+					}
+					if (cHexagon.coordY < y_min) {
+						x_min = cHegaxon.coordX;
+					}
+					if (cHexagon.coordY > y_max) {
+						x_min = cHegaxon.coordX;
+					}
+				}
+				
+				x_avg = (x_min + x_max) / 2;
+				y_avg = (y_min + y_max) / 2;
+				
+				avg_coords(0) = x_avg;
+				avg_coords(1) = y_avg;
 
+				return avg_coords;
 			}
 
-			function get_number_of_hexes_in_cluster(){
-
-			}
-
-			function get_maximum_possible_affected(){
-
+			//    input: none
+			//   output: none
+			// function: create a set of clusters (global var cluster), the sum of which contains every hex on the board
+			function define_clusters(){
+				for (var a = 0, bHexagon; bHexagon = hexagon[a]; a++) {
+					//if the current hex is not yet part of another cluster
+					if (bHexagon.clusterID == 0) {
+						//cycle through all hexes to find nearby one
+						for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
+							//offset the X coord for every other row, due to the hex grid layout
+							var xCoordOffset = b.coordY%2 == 0 ? -1 : 1;
+							//if the second hex is the same color as the original hex
+							if (cHexagon.hexagonColor == bHexagon.hexagonColor) {
+								//check if these hexes are adjacent
+								if (hexesAreAdjacent(bHexagon, cHexagon, xCoordOffset)) {
+									cHexagon.clusterID = bHexagon.clusterID;
+									cluster[bHexagon.clusterID].size++;
+								}
+							}
+						}			
+					}
+					//if the current hex is not yet part of an existing cluster, instantiate new cluster
+					else {
+						cluster[bHexagon.clusterID] = new function() {
+								this.ID = cluster.length;
+								this.color = bHexagon.hexagonColor;
+								
+								this.minX = bHexagon.coordX;
+								this.maxX = bHexagon.coordX;
+								this.avgX = bHexagon.coordX;
+								
+								this.minY = bHexagon.coordY;
+								this.maxY = bHexagon.coordY;
+								this.avgY = bHexagon.coordY;
+								
+								this.size = 1;
+						};
+					}
+				}
 			}
 			
-			function firstMove(){
+			function randomFirstMove(){
+				var randomHex = Math.floor(Math.random() * hexagon.length);
 				
+				for (var a = 0, h; h = hexagon[a]; a++) {
+					NewGame().simulateMouseDown(h);   
+				}
+				
+				randomNextMove();
 			}
-
-
+			
+			function randomNextMove(){
+			
+				var randomColor = Math.floor(Math.random() * 7);
+				var repeat = true;
+				
+				while (repeat == true){
+					repeat = false;
+					for (var a = 0, h; h = hexagon[a]; a++) {
+						if (h.hexagonColor == colors[randomColor]){
+							NewGame().simulateMouseDown(h);
+							repeat = true;
+						}
+					}
+				}
+			}
 //end neural network
+	
+			function hexesAreAdjacent(bHexagon, cHexagon, xCoordOffset) {
+				if ((cHexagon.coordY == bHexagon.coordY - 1 && cHexagon.coordX == bHexagon.coordX + 0) ||
+					(cHexagon.coordY == bHexagon.coordY - 1 && cHexagon.coordX == bHexagon.coordX + xCoordOffset) ||
+					(cHexagon.coordY == bHexagon.coordY + 0 && cHexagon.coordX == bHexagon.coordX - 1) ||
+					(cHexagon.coordY == bHexagon.coordY + 0 && cHexagon.coordX == bHexagon.coordX + 1) ||
+					(cHexagon.coordY == bHexagon.coordY + 1 && cHexagon.coordX == bHexagon.coordX + 0) ||
+					(cHexagon.coordY == bHexagon.coordY + 1 && cHexagon.coordX == bHexagon.coordX + xCoordOffset)) {
+					return true;	
+				}
+				return false;
+			}
 
 			function writeMessage(messageLayer, message){
 				var context = messageLayer.getContext();
@@ -131,12 +235,7 @@
 						for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 							var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
 								if (cHexagon.hexagonColor == vOrigColor) {
-									if ((cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-									(cHexagon.coordY == blackHexagon.coordY - 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset) ||
-									(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX - 1) ||
-									(cHexagon.coordY == blackHexagon.coordY + 0 && cHexagon.coordX == blackHexagon.coordX + 1) ||
-									(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + 0) ||
-									(cHexagon.coordY == blackHexagon.coordY + 1 && cHexagon.coordX == blackHexagon.coordX + xCoordOffset)) {
+									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
 									switch (mouseAction) {
 										case "DOWN":
 											cHexagon.hexagonColor = "black";
@@ -209,8 +308,6 @@
 				var stage = new Kinetic.Stage("container", halfHexagonX * (gridSize + 1) * 2, halfHexagonY * (gridSize + 1));
 				var shapesLayer = new Kinetic.Layer();
 				var messageLayer = new Kinetic.Layer();
-				var colors = ["red", "orange", "gold", "darkgreen", "lightblue", "mediumblue", "purple", "black"];
-				var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
 				var firstTurn = true;
 				var img;
 
@@ -300,25 +397,25 @@
 									switch (randomColor) {
 										case 0:
 											img = img0;
-										break;
+											break;
 										case 1:
 											img = img1;
-										break;
+											break;
 										case 2:
 											img = img2;
-										break;
+											break;
 										case 3:
 											img = img3;
-										break;
+											break;
 										case 4:
 											img = img4;
-										break;
+											break;
 										case 5:
 											img = img5;
-										break;
+											break;
 										case 6:
 											img = img6;
-										break;
+											break;
 									}
 
 									this.hexagonColor = colors[randomColor];
@@ -365,50 +462,56 @@
 							}); 
 							*/
 
+							//attach a 'on mouse over event' to each hexagon object
 							hexagon[m * gridSize + n].on("mouseover", function(){
-								simulateMouseOver();
+								//this function funnels both human and computer actions
+								simulateMouseOver(this);
 							});
 							
-							function simulateMouseOver() {
+							function simulateMouseOver(h) {
 								document.body.style.cursor = "pointer";
 										
-								if (this.hexagonOn != "OFF") {
+								if (h.hexagonOn != "OFF") {
 									var repeat = true;
 									
 									while (repeat == true) {
-										repeat = eliminateHexes(this.hexagonOrigColor, "OVER");	
+										repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
 									}
 								}
 								
 								shapesLayer.draw();				
 							}
 						
+							//attach a 'on mouse out event' to each hexagon object
 							hexagon[m * gridSize + n].on("mouseout", function(){
-								simulateMouseOut();
+								//this function funnels both human and computer actions
+								simulateMouseOut(this);
 							});
 							
-							function simulateMouseOut() {
+							function simulateMouseOut(h) {
 								document.body.style.cursor = "default";
 											
 								//if (this.hexagonHover != "OFF") {
 								var repeat = true;
 								
 								while (repeat == true) {
-									repeat = eliminateHexes(this.hexagonOrigColor, "OUT");	
+									repeat = eliminateHexes(h.hexagonOrigColor, "OUT");	
 								} 
 								//}                       	
 								
 								shapesLayer.draw();
 							}
 													
+							//attach a 'on mouse down event' to each hexagon object
 							hexagon[m * gridSize + n].on("mousedown", function(){
-								simulateMouseClick();
+								//this function funnels both human and computer actions
+								simulateMouseDown(this);
 							});
 							
-							function simulateMouseDown() {
+							function simulateMouseDown(h) {
 								if (firstTurn == true) {
-									this.hexagonColor = "black";
-									this.hexagonOn = "OFF";
+									h.hexagonColor = "black";
+									h.hexagonOn = "OFF";
 									firstTurn = false;
 								}                            
 											
@@ -419,7 +522,7 @@
 								var repeat = true;
 							
 								while (repeat == true) {
-									repeat = eliminateHexes(this.hexagonOrigColor, "DOWN");	
+									repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
 								}
 							
 								var movesHTML = "Moves: " + moves;					
@@ -443,12 +546,15 @@
 								shapesLayer.draw();
 							}
 							 
+							//add current hexagon to the drawing canvas's shapes layer
 							shapesLayer.add(hexagon[m * gridSize + n]);
 						})();			
 					}
 				}		
 				stage.add(shapesLayer);
-				stage.add(messageLayer);   
+				stage.add(messageLayer);  
+				
+				randomFirstMove(); 
 			}
 		</script>
 		<style type="text/css"></style>
