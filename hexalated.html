@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<script src=https://teikn-js.googlecode.com/svn-history/r23/trunk/libraries/kinetic-v3.6.0.js></script>
-		<script>	
+		<script>			
 			var hexagon = [];
 
 			var movesCounted = "ON";
@@ -202,20 +202,61 @@
 				simulateMouseDown(hexagon[randomHex]);   
 			}
 			
-			function randomNextMove(){
-				var randomColor = Math.floor(Math.random() * 7);
-				//var repeat = true;
-				
-				//while (repeat == true){
-				//	repeat = false;
-					for (var a = 0, h; h = hexagon[a]; a++) {
-						if (h.hexagonColor == colors[randomColor]){
-							simulateMouseDown(h);
-				//			repeat = true;
+			function nextMove(mode){
+				var nextColor = "";
+				 
+				switch (mode) {
+					case "RANDOM":
+						var randomColor = Math.floor(Math.random() * 7);
+						nextColor = colors[randomColor];
+					break;
+					case "MAX_HEX":
+						var maxCount = 0;
+					
+						for (var a = 0; a < color.length; a++) {
+							var currentCount = get_number_of_color_affected(color[a]);
+							if (currentCount > maxCount) {
+								currentMax = maxCount;
+								nextColor = color[a];
+							}
 						}
+					break;
+					case "MOST_LEFT":
+						var mostLeft = 0;
+					
+						for (var a = 0; a < color.length; a++) {
+							var currentCount = get_number_of_color_remaining(color[a]);
+							if (currentCount > mostLeft) {
+								currentMax = mostLeft;
+								nextColor = color[a];
+							}
+						}
+					break;
+					case "MOST_CENTERED":
+						var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
+						var mostCentered = 10000;
+					
+						for (var a = 0; a < color.length; a++) {
+							var currentX = get_affected_center(color[a])[0];
+							var currentY = get_affected_center(color[a])[1];
+							//crude distance from center
+							var distance = Math.abs((gridSize / 2) - currentX) + Math.abs((gridSize / 2) - currentY)
+							if (distance < mostCentered) {
+							
+								mostCentered = distance;
+								nextColor = color[a];
+							}
+						}
+					
+					break;	
+				}
+				for (var a = 0, h; h = hexagon[a]; a++) {
+					if (h.hexagonColor == colors[randomColor]){
+						simulateMouseDown(h);
 					}
-				//}
+				}
 			}
+			
 //end neural network
 	
 			function hexesAreAdjacent(bHexagon, cHexagon, xCoordOffset) {
@@ -572,7 +613,7 @@
 			function simulateMouseUp() {
 				//call redraw of the entire canvas on mouse up
 				if (NPC) {								
-					randomNextMove();
+					nextMove("RANDOM");
 				}
 				
 				shapesLayer.draw();
