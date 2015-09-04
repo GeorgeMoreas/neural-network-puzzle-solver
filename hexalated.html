@@ -60,14 +60,14 @@
 				while (repeat == true) {
 					repeat = false;
 					for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
-						if (blackHexagon.hexagonOn == "OFF" || blackHexagon.hexagonOn == "OFF_temp") {
+						if (blackHexagon.hexagonOn == "OFF" || blackHexagon.hexagonOn == "OFF_TEMP") {
 							for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 								var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
-								if (cHexagon.hexagonColor == cColor) {
+								if (cHexagon.hexagonColor == cColor && cHexagon.hexagonOn != "OFF_TEMP") {
 									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
 										//set hex to OFF temporarily, to simulate this hex being eliminated
 										//to calculate a chain reaction
-										cHexagon.hexagonOn = "OFF_temp";
+										cHexagon.hexagonOn = "OFF_TEMP";
 										count++;
 										repeat = true;
 									}
@@ -79,7 +79,7 @@
 				
 				//return all hexes temporarily set to OFF back to ON
 				for (var a = 0, cHexagon; cHexagon = hexagon[a]; a++) {
-					if (cHexagon.hexagonOn == "OFF_temp") {
+					if (cHexagon.hexagonOn == "OFF_TEMP") {
 						cHexagon.hexagonOn = "ON";
 					}
 				}
@@ -208,27 +208,29 @@
 				switch (mode) {
 					case "RANDOM":
 						var randomColor = Math.floor(Math.random() * 7);
+						
 						nextColor = colors[randomColor];
 					break;
 					case "MAX_HEX":
 						var maxCount = 0;
 					
-						for (var a = 0; a < color.length; a++) {
-							var currentCount = get_number_of_color_affected(color[a]);
+						for (var a = 0; a < colors.length; a++) {
+							var currentCount = get_number_of_color_affected(colors[a]);
+							
 							if (currentCount > maxCount) {
 								currentMax = maxCount;
-								nextColor = color[a];
+								nextColor = colors[a];
 							}
 						}
 					break;
 					case "MOST_LEFT":
 						var mostLeft = 0;
 					
-						for (var a = 0; a < color.length; a++) {
-							var currentCount = get_number_of_color_remaining(color[a]);
+						for (var a = 0; a < colors.length; a++) {
+							var currentCount = get_number_of_color_remaining(colors[a]);
 							if (currentCount > mostLeft) {
 								currentMax = mostLeft;
-								nextColor = color[a];
+								nextColor = colors[a];
 							}
 						}
 					break;
@@ -236,15 +238,15 @@
 						var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
 						var mostCentered = 10000;
 					
-						for (var a = 0; a < color.length; a++) {
-							var currentX = get_affected_center(color[a])[0];
-							var currentY = get_affected_center(color[a])[1];
+						for (var a = 0; a < colors.length; a++) {
+							var currentX = get_affected_center(colors[a])[0];
+							var currentY = get_affected_center(colors[a])[1];
 							//crude distance from center
 							var distance = Math.abs((gridSize / 2) - currentX) + Math.abs((gridSize / 2) - currentY)
 							if (distance < mostCentered) {
 							
 								mostCentered = distance;
-								nextColor = color[a];
+								nextColor = colors[a];
 							}
 						}
 					
@@ -613,7 +615,7 @@
 			function simulateMouseUp() {
 				//call redraw of the entire canvas on mouse up
 				if (NPC) {								
-					nextMove("RANDOM");
+					nextMove("MAX_HEX");
 				}
 				
 				shapesLayer.draw();
