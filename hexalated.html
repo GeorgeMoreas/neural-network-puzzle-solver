@@ -200,10 +200,14 @@
 			function randomFirstMove(){
 				var randomHex = Math.floor(Math.random() * hexagon.length);
 				
-				simulateMouseDown(hexagon[randomHex]);   
+				simulateMouseDown(hexagon[randomHex], true);  
+				while (moves <= 30) {
+					setTimeout(nextMove("MAX_HEX", "HOVER"), 1000) //wait ten seconds before continuing	
+					setTimeout(nextMove("MAX_HEX", "CLICK"), 1000) //wait ten seconds before continuing		
+				}
 			}
 			
-			function nextMove(mode){
+			function nextMove(mode, action){
 				var nextColor = "";
 				 
 				switch (mode) {
@@ -258,7 +262,12 @@
 				}
 				for (var a = 0, h; h = hexagon[a]; a++) {
 					if (h.hexagonColor == nextColor){
-						simulateMouseDown(h, true);
+						if (action == "CLICK") {
+							simulateMouseDown(h, true);
+						}
+						if (action == "HOVER") {
+							simulateMouseOver(h, true);
+						}
 					}
 				}
 			}
@@ -556,7 +565,8 @@
 			
 			function simulateMouseOver(h) {
 				//do nothing if player is AI
-				if (NPC) {
+				//always do else
+				if (1 == 2) {
 					//
 				} else {
 					document.body.style.cursor = "pointer";
@@ -635,9 +645,9 @@
 			//function that allows both human clicks and simulated clicks
 			function simulateMouseUp() {
 				//play the next move if player is AI
-				if (NPC) {								
-					nextMove("MAX_HEX");
-				}
+				//if (NPC) {								
+				//	nextMove("MAX_HEX");
+				//}
 				
 				//call redraw of the entire canvas on mouse up
 				shapesLayer.draw();
