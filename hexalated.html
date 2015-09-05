@@ -200,10 +200,22 @@
 			function randomFirstMove(){
 				var randomHex = Math.floor(Math.random() * hexagon.length);
 				
-				simulateMouseDown(hexagon[randomHex], true);  
-				while (moves <= 30) {
-					setTimeout(nextMove("MAX_HEX", "HOVER"), 1000) //wait ten seconds before continuing	
-					setTimeout(nextMove("MAX_HEX", "CLICK"), 1000) //wait ten seconds before continuing		
+				simulateMouseDown(hexagon[randomHex], true); 
+				/*
+				var x = 0; 
+				while (x < 30) {
+					nextMove("MAX_HEX", "HOVER");
+					sleepy(); //wait ten seconds before continuing	
+					nextMove("MAX_HEX", "CLICK");	
+					x++;	
+				}
+				*/
+			}
+			
+			function sleepy() {
+				x = 0;
+				while (x < 1000000) {
+					x++;
 				}
 			}
 			
@@ -563,24 +575,38 @@
 			}
 			
 			
-			function simulateMouseOver(h) {
-				//do nothing if player is AI
-				//always do else
-				if (1 == 2) {
-					//
+			function simulateMouseOver(h, AIMouseDown) {
+				if (!AIMouseDown) {
+					//do nothing if player is AI
+					//always do else
+					if (NPC) {	
+						nextMove("MAX_HEX", "HOVER");
+					} else {
+						document.body.style.cursor = "pointer";
+					
+						if (h.hexagonOn != "OFF") {
+							var repeat = true;
+				
+							while (repeat == true) {
+								repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
+							}
+						}
+			
+						shapesLayer.draw();	
+					}		
 				} else {
 					document.body.style.cursor = "pointer";
 					
 					if (h.hexagonOn != "OFF") {
 						var repeat = true;
-				
+			
 						while (repeat == true) {
 							repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
 						}
 					}
-			
+		
 					shapesLayer.draw();	
-				}			
+				}
 			}
 							
 			function simulateMouseOut(h) {
@@ -645,9 +671,9 @@
 			//function that allows both human clicks and simulated clicks
 			function simulateMouseUp() {
 				//play the next move if player is AI
-				//if (NPC) {								
-				//	nextMove("MAX_HEX");
-				//}
+				if (NPC) {								
+					nextMove("MAX_HEX", "CLICK");
+				}
 				
 				//call redraw of the entire canvas on mouse up
 				shapesLayer.draw();
