@@ -45,7 +45,9 @@
 			
 				for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
 					if (cHexagon.hexagonColor == cColor) {
-						count++;
+						if (cHexagon.hexagonOn == "ON") {
+							count++;
+						}
 					}
 				}
 				return count;
@@ -63,7 +65,7 @@
 						if (blackHexagon.hexagonOn == "OFF" || blackHexagon.hexagonOn == "OFF_TEMP") {
 							for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 								var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
-								if (cHexagon.hexagonColor == cColor && cHexagon.hexagonOn != "OFF_TEMP") {
+								if (cHexagon.hexagonColor == cColor && cHexagon.hexagonOn == "ON") {
 									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
 										//set hex to OFF temporarily, to simulate this hex being eliminated
 										//to calculate a chain reaction
@@ -83,7 +85,6 @@
 						cHexagon.hexagonOn = "ON";
 					}
 				}
-				
 				return count;
 			}
 
@@ -207,18 +208,18 @@
 				 
 				switch (mode) {
 					case "RANDOM":
-						var randomColor = Math.floor(Math.random() * 7);
+						var randomColor = Math.floor(Math.random() * 6);
 						
 						nextColor = colors[randomColor];
 					break;
 					case "MAX_HEX":
 						var maxCount = 0;
 					
-						for (var a = 0; a < colors.length; a++) {
+						for (var a = 0; a < colors.length - 1; a++) {
 							var currentCount = get_number_of_color_affected(colors[a]);
 							
 							if (currentCount > maxCount) {
-								currentMax = maxCount;
+								maxCount = currentCount;
 								nextColor = colors[a];
 							}
 						}
@@ -226,35 +227,38 @@
 					case "MOST_LEFT":
 						var mostLeft = 0;
 					
-						for (var a = 0; a < colors.length; a++) {
+						for (var a = 0; a < colors.length - 1; a++) {
 							var currentCount = get_number_of_color_remaining(colors[a]);
+							
 							if (currentCount > mostLeft) {
-								currentMax = mostLeft;
+								mostLeft = currentCount;
 								nextColor = colors[a];
 							}
 						}
+						alert (nextColor);
 					break;
 					case "MOST_CENTERED":
 						var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
 						var mostCentered = 10000;
 					
-						for (var a = 0; a < colors.length; a++) {
+						for (var a = 0; a < colors.length - 1; a++) {
 							var currentX = get_affected_center(colors[a])[0];
 							var currentY = get_affected_center(colors[a])[1];
 							//crude distance from center
 							var distance = Math.abs((gridSize / 2) - currentX) + Math.abs((gridSize / 2) - currentY)
+							
 							if (distance < mostCentered) {
 							
 								mostCentered = distance;
 								nextColor = colors[a];
 							}
 						}
-					
+						alert (nextColor);					
 					break;	
 				}
 				for (var a = 0, h; h = hexagon[a]; a++) {
-					if (h.hexagonColor == colors[randomColor]){
-						simulateMouseDown(h);
+					if (h.hexagonColor == nextColor){
+						simulateMouseDown(h, true);
 					}
 				}
 			}
@@ -472,6 +476,7 @@
 									this.hexagonColor = colors[randomColor];
 									this.hexagonColorHover = colorsHover[randomColor];
 									this.hexagonOrigColor = this.hexagonColor;
+									this.hexagonOn = "ON";
 								}
 								else {
 									this.hexagonColor = colors[7];
@@ -550,6 +555,7 @@
 			
 			
 			function simulateMouseOver(h) {
+				//do nothing if player is AI
 				if (NPC) {
 					//
 				} else {
@@ -568,6 +574,7 @@
 			}
 							
 			function simulateMouseOut(h) {
+				//do nothing if player is AI
 				if (NPC) {								
 					//
 				} else {
@@ -585,21 +592,35 @@
 				}
 			}
 			
-			function simulateMouseDown(h) {
+			function simulateMouseDown(h, AIMouseDown) {
 				if (firstTurn == true) {
 					h.hexagonColor = "black";
 					h.hexagonOn = "OFF";
 					firstTurn = false;
-				}                            
-							
-				//writeMessage(messageLayer, hexagon.indexOf(this));
-							
-				movesCounted = "OFF";
-			
-				var repeat = true;
-			
-				while (repeat == true) {
-					repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
+				}  
+				if (!AIMouseDown) {
+					//do nothing if player is AI
+					if (NPC) {
+						//
+					} else {                          	
+						//writeMessage(messageLayer, hexagon.indexOf(this));
+									
+						movesCounted = "OFF";
+					
+						var repeat = true;
+					
+						while (repeat == true) {
+							repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
+						}
+					}
+				} else {
+					movesCounted = "OFF";
+				
+					var repeat = true;
+				
+					while (repeat == true) {
+						repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
+					}
 				}
 			
 				var movesHTML = "Moves: " + moves;					
@@ -613,11 +634,12 @@
 			
 			//function that allows both human clicks and simulated clicks
 			function simulateMouseUp() {
-				//call redraw of the entire canvas on mouse up
+				//play the next move if player is AI
 				if (NPC) {								
 					nextMove("MAX_HEX");
 				}
 				
+				//call redraw of the entire canvas on mouse up
 				shapesLayer.draw();
 			}
 			
