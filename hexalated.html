@@ -23,6 +23,69 @@
 			var cluster = [];
 			var NPC = false;
 
+			/// write to file
+			var filepath = "file:///Users/admin/Downloads/hexalated_neural.txt";
+			var output = "";
+
+			////////////////////////////////////////////////////
+			/**
+			 * writeTextFile write data to file on hard drive
+			 * @param  string  filepath   Path to file on hard drive
+			 * @param  sring   output     Data to be written
+			 */
+			function writeTextFile(/*filepath, output*/) {
+				var txtFile = new File(filepath);
+				txtFile.open("w"); //
+				txtFile.writeln(output);
+				txtFile.close();
+			}
+
+			////////////////////////////////////////////////////
+			/**
+			 * readTextFile read data from file
+			 * @param  string   filepath   Path to file on hard drive
+			 * @return string              String with file data
+			 */
+			function readTextFile(/*filepath*/) {
+				var str = "";
+				var txtFile = new File(filepath);
+				txtFile.open("r");
+				while (!txtFile.eof) {
+					// read each line of text
+					str += txtFile.readln() + "\n";
+				}
+				txtFile.close();
+				return str;
+			}
+
+			////////////////////////////////////////////////////
+
+			// Great parse examples with result to process file
+			// http://www.w3schools.com/jsref/jsref_parseint.asp
+			// var a = parseInt("10");           // 10
+			// var b = parseInt("10.00");        // 10
+			// var c = parseInt("10.33");        // 10
+			// var d = parseInt("34 45 66");     // 34
+			// var e = parseInt(" 60 ");         // 60
+			// var f = parseInt("40 years");     // 40
+			// var g = parseInt("He was 40");    // NaN
+			//
+			// var h = parseInt("10",10);        // 10
+			// var i = parseInt("010");          // 10
+			// var j = parseInt("10",8);         // 8
+			// var k = parseInt("0x10");         // 16
+			// var l = parseInt("10",16);        // 16
+
+			// http://www.w3schools.com/jsref/jsref_parsefloat.asp
+			// var a = parseFloat("10");         // 10
+			// var b = parseFloat("10.00");      // 10
+			// var c = parseFloat("10.33");      // 10.33
+			// var d = parseFloat("34 45 66");   // 34
+			// var e = parseFloat(" 60 ");       // 60
+			// var f = parseFloat("40 years");   // 40
+			// var g = parseFloat("He was 40");  // NaN
+
+
 //neural network
 /*			function train(iterations){
 			var X = np.array([ [0,0,1],[0,1,1],[1,0,1],[1,1,1] ]);
@@ -156,7 +219,7 @@
 			function define_clusters(){
 				for (var a = 0, bHexagon; bHexagon = hexagon[a]; a++) {
 					//if the current hex is not yet part of another cluster
-					if (bHexagon.clusterID == 0) {
+					if (bHexagon.clusterID > 0) {
 						//cycle through all hexes to find nearby one
 						for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
 							//offset the X coord for every other row, due to the hex grid layout
@@ -194,29 +257,37 @@
 			function AINewGame(){
 				NPC = true;
 				NewGame();
-				randomFirstMove();
+				define_clusters();
+				firstMove("RANDOM");
 			}
 			
-			function randomFirstMove(){
-				var randomHex = Math.floor(Math.random() * hexagon.length);
+			function firstMove(mode){
+				var nextColor = "";
 				
-				simulateMouseDown(hexagon[randomHex], true); 
-				/*
-				var x = 0; 
-				while (x < 30) {
-					nextMove("MAX_HEX", "HOVER");
-					sleepy(); //wait ten seconds before continuing	
-					nextMove("MAX_HEX", "CLICK");	
-					x++;	
+				switch (mode) {
+					case "RANDOM":
+						var randomHex = Math.floor(Math.random() * hexagon.length);
+						
+						simulateMouseDown(hexagon[randomHex], true); 
+					break;
+					case "MAX_HEX":
+						var maxSize = 0;
+						
+						for (var a = 0, c; c = cluster[a]; a++){	
+							if (c.size > maxSize){
+								maxSize = c.size;
+								nextColor = c.color;
+							}						
+						}
+					break;
+					case "MOST_LEFT":
+						//
+					break;
+					case "MOST_CENTERED:":
+						//
+					break;
 				}
-				*/
-			}
-			
-			function sleepy() {
-				x = 0;
-				while (x < 1000000) {
-					x++;
-				}
+				//nextMove(mode, "HOVER");
 			}
 			
 			function nextMove(mode, action){
@@ -469,6 +540,8 @@
 								this.coordX = i;
 								this.coordY = j;
 								
+								this.clusterID = 0;
+								
 								if (this.hexagonColor != "black") {
 									switch (randomColor) {
 										case 0:
@@ -575,12 +648,12 @@
 			}
 			
 			
-			function simulateMouseOver(h, AIMouseDown) {
-				if (!AIMouseDown) {
+			function simulateMouseOver(h, AIMouseOver) {
+				if (!AIMouseOver) {
 					//do nothing if player is AI
 					//always do else
 					if (NPC) {	
-						nextMove("MAX_HEX", "HOVER");
+						//
 					} else {
 						document.body.style.cursor = "pointer";
 					
@@ -591,7 +664,6 @@
 								repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
 							}
 						}
-			
 						shapesLayer.draw();	
 					}		
 				} else {
@@ -604,7 +676,6 @@
 							repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
 						}
 					}
-		
 					shapesLayer.draw();	
 				}
 			}
@@ -673,6 +744,7 @@
 				//play the next move if player is AI
 				if (NPC) {								
 					nextMove("MAX_HEX", "CLICK");
+					nextMove("MAX_HEX", "HOVER");
 				}
 				
 				//call redraw of the entire canvas on mouse up
