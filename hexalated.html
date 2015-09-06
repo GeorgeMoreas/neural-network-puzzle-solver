@@ -18,6 +18,7 @@
 			var messageLayer = new Kinetic.Layer();
 
 			var firstTurn = true;
+			var firstTurnAI = true;	
 				
 			//new global var for AI: cluster
 			var cluster = [];
@@ -700,7 +701,7 @@
 			}
 			
 			function simulateMouseDown(h, AIMouseDown) {
-				if (firstTurn == true) {
+				if (firstTurn) {
 					h.hexagonColor = "black";
 					h.hexagonOn = "OFF";
 					firstTurn = false;
@@ -728,6 +729,10 @@
 					while (repeat == true) {
 						repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
 					}
+					if (firstTurnAI){
+						firstTurnAI = false;
+						nextMove("MAX_HEX", "HOVER");
+					}
 				}
 			
 				var movesHTML = "Moves: " + moves;					
@@ -742,7 +747,7 @@
 			//function that allows both human clicks and simulated clicks
 			function simulateMouseUp() {
 				//play the next move if player is AI
-				if (NPC) {								
+				if (NPC) {				
 					nextMove("MAX_HEX", "CLICK");
 					nextMove("MAX_HEX", "HOVER");
 				}
