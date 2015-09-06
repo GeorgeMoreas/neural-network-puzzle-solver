@@ -218,39 +218,57 @@
 			//   output: none
 			// function: create a set of clusters (global var cluster), the sum of which contains every hex on the board
 			function define_clusters(){
-				for (var a = 0, bHexagon; bHexagon = hexagon[a]; a++) {
-					//if the current hex is not yet part of another cluster
-					if (bHexagon.clusterID > 0) {
+				for (var a = 0, thisHexagon; thisHexagon = hexagon[a]; a++) {
+					if (a == 0){
+						cluster[cluster.length] = new function() {
+								this.ID = cluster.length;
+								this.color = thisHexagon.hexagonColor;
+								
+								this.minX = thisHexagon.coordX;
+								this.maxX = thisHexagon.coordX;
+								this.avgX = thisHexagon.coordX;
+								
+								this.minY = thisHexagon.coordY;
+								this.maxY = thisHexagon.coordY;
+								this.avgY = thisHexagon.coordY;
+								
+								this.size = 1;
+						};
+						thisHexagon.clusterID = this.ID;
+					}
+					//if the current hex is part of another cluster
+					if (thisHexagon.clusterID > 0) {
 						//cycle through all hexes to find nearby one
-						for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
+						for (var b = 0, thatHexagon; thatHexagon = hexagon[b]; b++) {	
 							//offset the X coord for every other row, due to the hex grid layout
 							var xCoordOffset = b.coordY%2 == 0 ? -1 : 1;
 							//if the second hex is the same color as the original hex
-							if (cHexagon.hexagonColor == bHexagon.hexagonColor) {
+							if (thatHexagon.hexagonColor == thisHexagon.hexagonColor) {
 								//check if these hexes are adjacent
-								if (hexesAreAdjacent(bHexagon, cHexagon, xCoordOffset)) {
-									cHexagon.clusterID = bHexagon.clusterID;
-									cluster[bHexagon.clusterID].size++;
+								if (hexesAreAdjacent(thisHexagon, thatHexagon, xCoordOffset)) {
+									thatHexagon.clusterID = thisHexagon.clusterID;
+									cluster[thisHexagon.clusterID].size++;
 								}
 							}
 						}			
 					}
 					//if the current hex is not yet part of an existing cluster, instantiate new cluster
 					else {
-						cluster[bHexagon.clusterID] = new function() {
+						cluster[cluster.length] = new function() {
 								this.ID = cluster.length;
-								this.color = bHexagon.hexagonColor;
+								this.color = thisHexagon.hexagonColor;
 								
-								this.minX = bHexagon.coordX;
-								this.maxX = bHexagon.coordX;
-								this.avgX = bHexagon.coordX;
+								this.minX = thisHexagon.coordX;
+								this.maxX = thisHexagon.coordX;
+								this.avgX = thisHexagon.coordX;
 								
-								this.minY = bHexagon.coordY;
-								this.maxY = bHexagon.coordY;
-								this.avgY = bHexagon.coordY;
+								this.minY = thisHexagon.coordY;
+								this.maxY = thisHexagon.coordY;
+								this.avgY = thisHexagon.coordY;
 								
 								this.size = 1;
 						};
+						thisHexagon.clusterID = this.ID;
 					}
 				}
 			}
@@ -259,7 +277,7 @@
 				NPC = true;
 				NewGame();
 				define_clusters();
-				firstMove("RANDOM");
+				firstMove("MAX_HEX");
 			}
 			
 			function firstMove(mode){
