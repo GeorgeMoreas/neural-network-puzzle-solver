@@ -1,7 +1,22 @@
 <html>
 	<head>
 		<script src=https://teikn-js.googlecode.com/svn-history/r23/trunk/libraries/kinetic-v3.6.0.js></script>
-		<script>			
+		<script>
+			/*****
+			* unbound array of the hexagon object, basically the main object in the game
+			* 
+			* defined with: new Kinetic.Shape(function(hexagonOrigColor, hexagonColor, hexagonColorHover, coordX, coordY, hexagonOn, hoverOn){});
+			* 
+			* attributes:
+			* .hexagonOrigColor = string from the 'colors' array, initial color of hex, at the beginning of the game
+			* .hexagonColor = string from the 'colors' array, can change to black
+			* .hexagonColorHover = string from the 'colorsHover' array, slightly lighter than normal colors, used to show which hexes will be destroyed with current color selection
+			* .coordX = integer between 0 and gridSize, gets offset by 1 every odd row
+			* .coordY = integer between 0 and gridSize
+			* .hexagonOn = string, can be "ON", "OFF", or "OFF_TEMP". "OFF" means the hexagon has been eliminated, "ON" - still in play, "TEMP_OFF" - used by AI for next turn calculation, but is then set back to "ON"
+			* .hoverOn = string, can be "ON" or "OFF", "ON" - hexagon color is currently in hover/slightly lighter color mode, "OFF" - hexagon color is not hovered over
+			* 
+			*/
 			var hexagon = [];
 
 			var movesCounted = "ON";
