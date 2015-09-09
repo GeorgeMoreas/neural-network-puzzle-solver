@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<script src=https://teikn-js.googlecode.com/svn-history/r23/trunk/libraries/kinetic-v3.6.0.js></script>
-		<script>
+		<script>	
 			/*****
 			* unbound array of the hexagon object, basically the main object in the game
 			* 
@@ -16,29 +16,60 @@
 			* .hexagonOn = string, can be "ON", "OFF", or "OFF_TEMP". "OFF" means the hexagon has been eliminated, "ON" - still in play, "TEMP_OFF" - used by AI for next turn calculation, but is then set back to "ON"
 			* .hoverOn = string, can be "ON" or "OFF", "ON" - hexagon color is currently in hover/slightly lighter color mode, "OFF" - hexagon color is not hovered over
 			* 
-			*/
+			*/		
 			var hexagon = [];
 
+			//I don't remember what it does, should look it up and update this comment..
 			var movesCounted = "ON";
 
+			//number of moves used during this game
 			var moves = 0;
+			//current score
 			var score = 0;
+			//initial score that (scorePerMove * moves) will be subtracted from
 			var scoreInitial = 300;
+			//score lost per each move
 			var scorePerMove = 10;
 
+			//string literals of colors used in the game
 			var colors = ["red", "orange", "gold", "darkgreen", "lightblue", "mediumblue", "purple", "black"];
+			//string literals of colors used in the game, hover mode
 			var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
 
+			//drawing layer for shapes
 			var shapesLayer = new Kinetic.Layer();
+			//drawing layer for messages, I don't remember how I use it
 			var messageLayer = new Kinetic.Layer();
 
+			//since hex elimination happens differently for the very first hex, we need to know if it's the first turn
+			//as I was typing this comment, I realized I could just use (moves) variables, but it still seems a good idea to have a separate var
 			var firstTurn = true;
+			//first turn variable, but for AI mode
 			var firstTurnAI = true;	
 				
-			//new global var for AI: cluster
+			/*****
+			* unbound array containing all cluster objects
+			* new global var for AI: cluster, used for storing data about clusters
+			*
+			* this.ID = cIndex;
+			* this.color = thisHex.hexagonColor;
+			*						
+			* this.minX = thisHex.coordX;
+			* this.maxX = thisHex.coordX;
+			* this.avgX = thisHex.coordX;
+			*					
+			* this.minY = thisHex.coordY;
+			* this.maxY = thisHex.coordY;
+			* this.avgY = thisHex.coordY;
+			*					
+			* this.size = 1;
+			* 
+			*****/
 			var cluster = [];
+			// is this a human or NPC player
 			var NPC = false;
-
+			
+			
 			/// write to file
 			var filepath = "file:///Users/admin/Downloads/hexalated_neural.txt";
 			var output = "";
@@ -233,57 +264,53 @@
 			//   output: none
 			// function: create a set of clusters (global var cluster), the sum of which contains every hex on the board
 			function define_clusters(){
-				for (var a = 0, thisHexagon; thisHexagon = hexagon[a]; a++) {
-					if (a == 0){
-						cluster[cluster.length] = new function() {
-								this.ID = cluster.length;
-								this.color = thisHexagon.hexagonColor;
-								
-								this.minX = thisHexagon.coordX;
-								this.maxX = thisHexagon.coordX;
-								this.avgX = thisHexagon.coordX;
-								
-								this.minY = thisHexagon.coordY;
-								this.maxY = thisHexagon.coordY;
-								this.avgY = thisHexagon.coordY;
-								
-								this.size = 1;
-						};
-						thisHexagon.clusterID = this.ID;
-					}
-					//if the current hex is part of another cluster
-					if (thisHexagon.clusterID > 0) {
-						//cycle through all hexes to find nearby one
-						for (var b = 0, thatHexagon; thatHexagon = hexagon[b]; b++) {	
-							//offset the X coord for every other row, due to the hex grid layout
-							var xCoordOffset = b.coordY%2 == 0 ? -1 : 1;
-							//if the second hex is the same color as the original hex
-							if (thatHexagon.hexagonColor == thisHexagon.hexagonColor) {
-								//check if these hexes are adjacent
-								if (hexesAreAdjacent(thisHexagon, thatHexagon, xCoordOffset)) {
-									thatHexagon.clusterID = thisHexagon.clusterID;
-									cluster[thisHexagon.clusterID].size++;
-								}
-							}
-						}			
-					}
+				for (var a = 0, thisHex; thisHex = hexagon[a]; a++) {
 					//if the current hex is not yet part of an existing cluster, instantiate new cluster
-					else {
-						cluster[cluster.length] = new function() {
-								this.ID = cluster.length;
-								this.color = thisHexagon.hexagonColor;
+					if (thisHex.clusterID == -1){
+						var cIndex = cluster.length;
+					
+						cluster[cIndex] = new function(ID, color, minX, maxX, avgX, minY, maxY, avgY, size) {
+								this.ID = cIndex;
+								this.color = thisHex.hexagonColor;
 								
-								this.minX = thisHexagon.coordX;
-								this.maxX = thisHexagon.coordX;
-								this.avgX = thisHexagon.coordX;
+								this.minX = thisHex.coordX;
+								this.maxX = thisHex.coordX;
+								this.avgX = thisHex.coordX;
 								
-								this.minY = thisHexagon.coordY;
-								this.maxY = thisHexagon.coordY;
-								this.avgY = thisHexagon.coordY;
+								this.minY = thisHex.coordY;
+								this.maxY = thisHex.coordY;
+								this.avgY = thisHex.coordY;
 								
 								this.size = 1;
 						};
-						thisHexagon.clusterID = this.ID;
+						thisHex.clusterID = cIndex;
+					}					
+					var cID = thisHex.clusterID;
+					
+					//cycle through all hexes to find nearby one
+					for (var b = 0, thatHex; thatHex = hexagon[b]; b++) {
+						//only look at that hex if it's not yet part of a cluster	
+						if (thatHex.clusterID == -1) {
+							//offset the X coord for every other row, due to the hex grid layout
+							var xCoordOffset = thisHex.coordY%2 == 0 ? -1 : 1;
+							//if the second hex is the same color as the original hex
+							if (thatHex.hexagonColor == thisHex.hexagonColor) {
+								//check if these hexes are adjacent
+								if (hexesAreAdjacent(thisHex, thatHex, xCoordOffset)) {
+									thatHex.clusterID = cID;
+									cluster[cID].size++;
+									
+									cluster.maxX = thatHex.coordX > cluster.maxX ? thatHex.coordX : cluster.maxX;
+									cluster.minX = thatHex.coordX < cluster.minX ? thatHex.coordX : cluster.minX;
+									
+									cluster.maxY = thatHex.coordY > cluster.maxY ? thatHex.coordY : cluster.maxY;
+									cluster.minY = thatHex.coordY < cluster.minY ? thatHex.coordY : cluster.minY;
+									
+									cluster.avgX = (cluster.minX + cluster.maxX) / 2;
+									cluster.avgY = (cluster.minY + cluster.maxY) / 2;
+								}
+							}	
+						}		
 					}
 				}
 			}
@@ -310,12 +337,20 @@
 						for (var a = 0, c; c = cluster[a]; a++){	
 							if (c.size > maxSize){
 								maxSize = c.size;
-								nextColor = c.color;
+								maxCluster = c.ID;
 							}						
+						}
+						
+						for (var a = 0, h; h = hexagon[a]; a++) {
+							if (h.clusterID == maxCluster){
+								simulateMouseDown(h, true);
+							}
 						}
 					break;
 					case "MOST_LEFT":
-						//
+						var mostLeft = 0;
+						
+						.
 					break;
 					case "MOST_CENTERED:":
 						//
@@ -411,6 +446,11 @@
 				context.fillText(message, 10, 25);
 			}
 
+//////////////////////////////////////////////////////////////////
+//																//
+// Check if there are any hexes of same color that are adjacent //
+//																//																//
+//////////////////////////////////////////////////////////////////
 
 			function eliminateHexes(vOrigColor, mouseAction){
 				var repeat = false;
@@ -574,7 +614,7 @@
 								this.coordX = i;
 								this.coordY = j;
 								
-								this.clusterID = 0;
+								this.clusterID = -1;
 								
 								if (this.hexagonColor != "black") {
 									switch (randomColor) {
