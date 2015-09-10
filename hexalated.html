@@ -36,7 +36,7 @@
 			//string literals of colors used in the game, hover mode
 			var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
 
-			//drawing layer for shapes
+			//drawing layer for shapes, needs to be added to stage to get rendered
 			var shapesLayer = new Kinetic.Layer();
 			//drawing layer for messages, I don't remember how I use it
 			var messageLayer = new Kinetic.Layer();
@@ -148,8 +148,13 @@
 				syn0 += X.T.dot(l1_delta)
 			}
 */
-			//  input: color
-			// output: total amount of that color remaining on the board
+
+/*****************************************************************************************
+*
+* //  input: color
+* // output: total amount of that color remaining on the board
+*
+*/
 			function get_number_of_color_remaining(cColor){
 				var count = 0;
 			
@@ -162,9 +167,13 @@
 				}
 				return count;
 			}
-
-			//  input: color
-			// output: total amount of that color affected if this color is clicked next
+			
+/*****************************************************************************************
+*
+* input: color
+* output: total amount of that color affected if this color is clicked next
+*
+*/
 			function get_number_of_color_affected(cColor){
 				var count = 0;
 				var repeat = true;
@@ -197,9 +206,13 @@
 				}
 				return count;
 			}
-
-			//  input: color
-			// output: set of coordinates of the affected area is this color is clicked on next
+			
+/*****************************************************************************************
+*
+* input: color
+* output: set of coordinates of the affected area is this color is clicked on next
+*
+*/
 			function get_affected_coords(cColor){
 				var coords = [ , ];
 				var repeat = true;
@@ -222,9 +235,12 @@
 				}
 				return coords;
 			}
-
-			//  input: color
-			// output: average center coordinates of the affected area is this color is clicked on next
+/*****************************************************************************************
+* 
+* input: color
+* output: average center coordinates of the affected area is this color is clicked on next
+*
+*/
 			function get_affected_center(cColor){
 				var coords = get_affected_coords(cColor);
 				var avg_coords = [2];
@@ -260,9 +276,13 @@
 				return avg_coords;
 			}
 
-			//    input: none
-			//   output: none
-			// function: create a set of clusters (global var cluster), the sum of which contains every hex on the board
+/*****************************************************************************************
+*
+* input: none
+* output: none
+* function: create a set of clusters (global var cluster), the sum of which contains every hex on the board
+*
+*/
 			function define_clusters(){
 				for (var a = 0, thisHex; thisHex = hexagon[a]; a++) {
 					//if the current hex is not yet part of an existing cluster, instantiate new cluster
@@ -445,11 +465,11 @@
 				context.fillText(message, 10, 25);
 			}
 
-//////////////////////////////////////////////////////////////////
-//																//
-// Check if there are any hexes of same color that are adjacent //
-//																//																//
-//////////////////////////////////////////////////////////////////
+/*****************************************************************************************
+*																
+* Check if there are any hexes of same color that are adjacent 
+*																																//
+*/
 
 			function eliminateHexes(vOrigColor, mouseAction){
 				var repeat = false;
@@ -496,6 +516,12 @@
 				return repeat;
 			}
 
+/*****************************************************************************************
+*		               
+* I have no idea what this does, but looks like it's clipping the image :)
+*					   
+*/
+
 			function clippedBackgroundImage(ctx, img, w, h, X, Y, hover){
 			  var imgHeight = w / img.width * img.height;
 			  
@@ -514,6 +540,12 @@
 			  ctx.drawImage(img,X,Y,w,imgHeight);
 			  ctx.restore(); // Get rid of the clipping region
 			}
+
+/*****************************************************************************************
+*		               
+* Start new game here
+*					   
+*/
 
 			function NewGame(){
 				//hide settings input once the game begins
@@ -540,11 +572,11 @@
 				e.style.width = halfHexagonX * (gridSize + 1) * 2;
 				e.style.height = halfHexagonY * (gridSize + 1);
 
-				/***** 
-				*
-				* TEXTURES            
-				*
-				*****/
+/*****************************************************************************************
+*		                 
+* Textures defined here 
+*					     
+*/
 				
 				//URL string literals for texture images
 				var textureURL = [
@@ -570,12 +602,24 @@
 					imgArray[a].src = textureURL[a];					
 				}
 
+/*****************************************************************************************
+*		               
+* Grid generated here 
+*	                   
+*/
+
 				for (var m = 0; m < gridSize; m++) {
 					for (var n = 0; n < gridSize; n++) {
 						(function(){
 							var i = n;
 							var j = m;
 							var randomColor = Math.floor(Math.random() * 7);
+
+/*****************************************************************************************
+*		                          
+* hexagon objects initiated here 
+*					              
+*/
 
 							hexagon[m * gridSize + n] = new Kinetic.Shape(function(hexagonOrigColor, hexagonColor, hexagonColorHover, coordX, coordY, hexagonOn, hoverOn){     
 								var canvas = this.getCanvas();
