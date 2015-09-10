@@ -350,7 +350,6 @@
 					case "MOST_LEFT":
 						var mostLeft = 0;
 						
-						
 					break;
 					case "MOST_CENTERED:":
 						//
@@ -516,77 +515,60 @@
 			  ctx.restore(); // Get rid of the clipping region
 			}
 
-			window.onload = function(){
-				//NewGame();
-			};
-
 			function NewGame(){
+				//hide settings input once the game begins
 				document.getElementById("settings").style.display = 'none';
 
+				//grid size, square, from user input before the game
 				var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
+				//size of each hexagon on the screen
 				var hexSideLength = parseFloat(document.getElementById("txtHexSizeID").value);//15;
+				//constants to figure out hexagon math
 				var hexAngleX = 45;
 				var hexAngleY = 45;	
+				//constants determining length of half a hexagon
 				var halfHexagonX = hexSideLength * Math.sin(hexAngleX);
 				var halfHexagonY = hexSideLength * Math.cos(hexAngleY) + hexSideLength;
+				//size of the drawing canvas, from min/max coords of hex grid
 				var stage = new Kinetic.Stage("container", halfHexagonX * (gridSize + 1) * 2, halfHexagonY * (gridSize + 1));
-				var img;
+				//array container for textures
+				var imgArray = [];
+				//container for images used for rendering
+				var img = Object;
 
 				var e = document.getElementById("container");
 				e.style.width = halfHexagonX * (gridSize + 1) * 2;
 				e.style.height = halfHexagonY * (gridSize + 1);
 
-				/////////////////////////////////////////// TEXTURES            
-							
-				var img0=new Image();
-				img0.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img0.src="https://cloud.githubusercontent.com/assets/13951475/9512939/d18a28b0-4c3d-11e5-9c6d-c5a02d954b24.png";
-
-				var img1=new Image();
-				img1.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img1.src="https://cloud.githubusercontent.com/assets/13951475/9512941/d199c842-4c3d-11e5-9b24-55df76b44ade.png";
-							
-				var img2=new Image();
-				img2.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img2.src="https://cloud.githubusercontent.com/assets/13951475/9512936/d187b9b8-4c3d-11e5-88c0-f8a23ed09f5d.png";
-
-				var img3=new Image();
-				img3.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img3.src="https://cloud.githubusercontent.com/assets/13951475/9512935/d1878178-4c3d-11e5-816d-cb900d776ee1.png";
-
-				var img4=new Image();
-				img4.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img4.src="https://cloud.githubusercontent.com/assets/13951475/9512937/d18843a6-4c3d-11e5-976d-2badc7ad5f34.png";
-
-				var img5=new Image();
-				img5.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img5.src="https://cloud.githubusercontent.com/assets/13951475/9512940/d18a4af2-4c3d-11e5-9512-e498bb87d37c.png";
-
-				var img6=new Image();
-				img6.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				img6.src="https://cloud.githubusercontent.com/assets/13951475/9512938/d1894828-4c3d-11e5-9d07-f86ea8294054.png";
-
-				var imgSpace=new Image();
-				imgSpace.onload = function(){
-					  // Now you can pass the `img` object to various functions
-				};            
-				imgSpace.src="https://cloud.githubusercontent.com/assets/13951475/9512942/d19d1844-4c3d-11e5-905b-3502f962aaab.png";
-
-				////////////////////////////////////////////////////
+				/***** 
+				*
+				* TEXTURES            
+				*
+				*****/
+				
+				//URL string literals for texture images
+				var textureURL = [
+					"https://cloud.githubusercontent.com/assets/13951475/9512939/d18a28b0-4c3d-11e5-9c6d-c5a02d954b24.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512941/d199c842-4c3d-11e5-9b24-55df76b44ade.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512936/d187b9b8-4c3d-11e5-88c0-f8a23ed09f5d.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512935/d1878178-4c3d-11e5-816d-cb900d776ee1.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512937/d18843a6-4c3d-11e5-976d-2badc7ad5f34.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512940/d18a4af2-4c3d-11e5-9512-e498bb87d37c.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512938/d1894828-4c3d-11e5-9d07-f86ea8294054.png",
+					"https://cloud.githubusercontent.com/assets/13951475/9512942/d19d1844-4c3d-11e5-905b-3502f962aaab.png"
+				];
+				
+				//create img objects for textures
+				for (a = 0; a < 8; a++) {
+					//create new image object
+					imgArray[a] = new Image();
+					//empty initializer
+					imgArray[a].onload = function() {
+						// Now you can pass the `img` object to various functions
+					};           
+					//assign image source to a URL
+					imgArray[a].src = textureURL[a];					
+				}
 
 				for (var m = 0; m < gridSize; m++) {
 					for (var n = 0; n < gridSize; n++) {
@@ -598,9 +580,6 @@
 							hexagon[m * gridSize + n] = new Kinetic.Shape(function(hexagonOrigColor, hexagonColor, hexagonColorHover, coordX, coordY, hexagonOn, hoverOn){     
 								var canvas = this.getCanvas();
 								var context = this.getContext();  
-
-								//this.hexagonOn = typeof(this.hexagonOn) != 'undefined' ? this.hexagonOn : "ON";
-								//this.hoverOn = typeof(this.hoverOn) != 'undefined' ? this.hoverOn : "OFF";
 
 								if (j%2 == 0) {
 									var hexStartX = halfHexagonX + halfHexagonX * 2 * i;
@@ -617,30 +596,8 @@
 								this.clusterID = -1;
 								
 								if (this.hexagonColor != "black") {
-									switch (randomColor) {
-										case 0:
-											img = img0;
-											break;
-										case 1:
-											img = img1;
-											break;
-										case 2:
-											img = img2;
-											break;
-										case 3:
-											img = img3;
-											break;
-										case 4:
-											img = img4;
-											break;
-										case 5:
-											img = img5;
-											break;
-										case 6:
-											img = img6;
-											break;
-									}
-
+									img = imgArray[randomColor];
+									
 									this.hexagonColor = colors[randomColor];
 									this.hexagonColorHover = colorsHover[randomColor];
 									this.hexagonOrigColor = this.hexagonColor;
@@ -656,7 +613,6 @@
 								context.beginPath();
 								context.lineWidth = 2;
 								context.strokeStyle = this.hexagonOn != "OFF" ? "black" : "indigo";
-								//context.fillStyle = this.hoverOn != "ON" ? this.hexagonColor : this.hexagonColorHover;
 								context.moveTo(hexStartX, hexStartY);
 								context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
 								context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY) + hexSideLength);
@@ -665,26 +621,22 @@
 								context.lineTo(hexStartX - hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
 								context.closePath();
 								
-								if (this.hexagonOn != "OFF" || this.hoverOn == "ON") {
-									clippedBackgroundImage(context, img, halfHexagonX * 2, halfHexagonY * 3 / 2, hexStartX - halfHexagonX, hexStartY, this.hoverOn);
-								}
-								else {
-									clippedBackgroundImage(context, imgSpace, halfHexagonX * 2, halfHexagonY * 3 / 2, hexStartX - halfHexagonX, hexStartY, this.hoverOn);    			     
-								}
+								var textureImg = Object;
 								
+								//if hexagon is not OFF (aka ON) OR hover is ON, display texture
+								if (this.hexagonOn != "OFF" || this.hoverOn == "ON") {
+									textureImg = img;
+								}
+								//otherwise display space background
+								else {
+									textureImg = imgArray[7];
+								}
+								clippedBackgroundImage(context, textureImg, halfHexagonX * 2, halfHexagonY * 3 / 2, hexStartX - halfHexagonX, hexStartY, this.hoverOn);
+					
 								////shapesLayer.fill();
 								context.stroke();
 								context.restore();
 							});
-
-							/*
-							hexagon.draggable(true);
-
-							hexagon.on("dragstart", function(){
-								hexagon.moveToTop();
-								layer.draw();
-							}); 
-							*/
 
 							//attach a 'on mouse over event' to each hexagon object
 							hexagon[m * gridSize + n].on("mouseover", function(){
