@@ -80,7 +80,7 @@
 			 * @param  string  filepath   Path to file on hard drive
 			 * @param  sring   output     Data to be written
 			 */
-			function writeTextFile(/*filepath, output*/) {
+			function writeTextFile(output) {
 				var txtFile = new File(filepath);
 				txtFile.open("w"); //
 				txtFile.writeln(output);
@@ -105,34 +105,6 @@
 				return str;
 			}
 
-			////////////////////////////////////////////////////
-
-			// Great parse examples with result to process file
-			// http://www.w3schools.com/jsref/jsref_parseint.asp
-			// var a = parseInt("10");           // 10
-			// var b = parseInt("10.00");        // 10
-			// var c = parseInt("10.33");        // 10
-			// var d = parseInt("34 45 66");     // 34
-			// var e = parseInt(" 60 ");         // 60
-			// var f = parseInt("40 years");     // 40
-			// var g = parseInt("He was 40");    // NaN
-			//
-			// var h = parseInt("10",10);        // 10
-			// var i = parseInt("010");          // 10
-			// var j = parseInt("10",8);         // 8
-			// var k = parseInt("0x10");         // 16
-			// var l = parseInt("10",16);        // 16
-
-			// http://www.w3schools.com/jsref/jsref_parsefloat.asp
-			// var a = parseFloat("10");         // 10
-			// var b = parseFloat("10.00");      // 10
-			// var c = parseFloat("10.33");      // 10.33
-			// var d = parseFloat("34 45 66");   // 34
-			// var e = parseFloat(" 60 ");       // 60
-			// var f = parseFloat("40 years");   // 40
-			// var g = parseFloat("He was 40");  // NaN
-
-
 //neural network
 /*			function train(iterations){
 			var X = np.array([ [0,0,1],[0,1,1],[1,0,1],[1,1,1] ]);
@@ -154,7 +126,17 @@
 * //This is where the function that remembers current state of the game will go
 *
 *
-*
+*/
+			function storeState() {
+				var stateOutput = "";
+				
+				for (a = 0; a < hexagon.length; a++) {
+					stateOutput += ", " + hexagon[a].hexagonColor;
+				}
+				
+				alert(stateOutput);
+				//writeTextFile(stateOutput);
+			}
 
 /*****************************************************************************************
 *
@@ -722,6 +704,7 @@
 				stage.add(messageLayer);  
 				
 				//randomFirstMove(); 
+				storeState();
 			}
 			
 			
