@@ -46,6 +46,9 @@
 			var firstTurn = true;
 			//first turn variable, but for AI mode
 			var firstTurnAI = true;	
+			
+			//last color clicked, initialized to 'black'
+			var lastColor = colors[colors.length - 1];
 				
 			/*****
 			* unbound array containing all cluster objects
@@ -324,14 +327,47 @@
 				}
 			}
 			
+/*****************************************************************************************
+*
+* input: none
+* output: color of the largest cluster
+*
+*/
+			function get_largest_cluster_color(){
+				for (var a = 0, c; c = cluster[a]; a++){	
+					if (c.size > maxSize){
+						//make sure the cluster is not the same color as was just clicked
+						if (c.color != lastColor) {
+							maxSize = c.size;
+							maxCluster = c.color;
+						}
+					}						
+				}
+				return maxClusterColor;
+			}
+			
+			
 			function AINewGame(){
 				NPC = true;
 				NewGame();
 				define_clusters();
+				////////////////
+				////////////////////
+				///////////////
+				/////////////////////////
+				////////////////
+				// Make a selector!!
+				//////////////
+				///////////
+				/////
+				////////////
+				//////////////////
+				////////
 				firstMove("MAX_HEX");
 			}
 			
-			function firstMove(mode){
+			
+			function firstMove(firstMode){
 				var nextColor = "";
 				
 				switch (mode) {
@@ -354,14 +390,18 @@
 							if (h.clusterID == maxCluster){
 								simulateMouseDown(h, true);
 							}
+						}			
+					break;
+					case "MOST_CENTERED":
+						var gridSizeMiddle = parseFloat(document.getElementById("txtGridSizeID").value) / 2;
+					
+						for (var a = 0, h; h = hexagon[a]; a++) {
+							if (h.coordX == gridSizeMiddle) {
+								if (h.coordY == gridSizeMiddle) {
+									simulateMouseDown(h, true);
+								}
+							}
 						}
-					break;
-					case "MOST_LEFT":
-						var mostLeft = 0;
-						
-					break;
-					case "MOST_CENTERED:":
-						//
 					break;
 				}
 				//nextMove(mode, "HOVER");
@@ -399,7 +439,6 @@
 								nextColor = colors[a];
 							}
 						}
-						alert (nextColor);
 					break;
 					case "MOST_CENTERED":
 						var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
@@ -416,8 +455,22 @@
 								mostCentered = distance;
 								nextColor = colors[a];
 							}
-						}
-						alert (nextColor);					
+						}					
+					break;
+					case "MOST_CLUSTERS":
+						var mostCluster = 0;
+					
+						for (var a = 0; a < colors.length - 1; a++) {
+							var currentCount = get_number_of_color_remaining(colors[a]);
+							
+							if (currentCount > mostLeft) {
+								mostLeft = currentCount;
+								nextColor = colors[a];
+							}
+						}					
+					break;
+					case "LARGEST_CLUSTER":
+						nextColor = get_largest_cluster_color;				
 					break;	
 				}
 				for (var a = 0, h; h = hexagon[a]; a++) {
@@ -794,6 +847,8 @@
 					}
 				}
 			
+				lastColor = h.hexagonOrigColor;
+			
 				var movesHTML = "Moves: " + moves;					
 				var scoreHTML = "Score: " + score;
 			
@@ -861,6 +916,12 @@
 								<input type="text" name="txtHexSize" id="txtHexSizeID" value="15" />
 								<button onclick="NewGame();">Human</button>
 								<button onclick="AINewGame();">AI</button>
+								<select>
+									<option value="RANDOM">Random</option>
+									<option value="MAX_HEX">Most Affected Color</option>
+									<option value="MOST_LEFT">Most Remaining Color</option>
+									<option value="MOST_CENTERED">Most Centered Affected Color</option>
+								</select>
 							</span>
 						</font>
 					</p>
