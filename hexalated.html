@@ -360,6 +360,7 @@
 			function eliminateHovered() {
 				for (var a = 0, h; h = hexagon[a]; a++) {
 					if (h.hoverOn == "ON") {
+						lastColor = h.hexagonOrigColor;
 						h.hexagonColor = "black";
 						h.hoverOn = "OFF";
 						h.hexagonOn = "OFF";
@@ -595,10 +596,17 @@
 				//container for images used for rendering
 				var img = Object;
 				
-				firstMode = $( "#firstMove" ).val();
-				nextMode = $( "#nextMove" ).val();
-				document.getElementById("firstMoveLabel").innerHTML = "First Move: " + firstMode
-				document.getElementById("nextMoveLabel").innerHTML = "Next Move: " + nextMode
+				if (NPC) {
+					firstMode = $( "#firstMove" ).val();
+					nextMode = $( "#nextMove" ).val();
+					firstModeLabelValue = $( "#firstMove option:selected").text();
+					nextModeLabelValue = $( "#nextMove option:selected").text();
+					document.getElementById("firstMoveLabel").innerHTML = "First Move: " + firstModeLabelValue
+					document.getElementById("nextMoveLabel").innerHTML = "Next Move: " + nextModeLabelValue
+				} else {
+					document.getElementById("firstMoveLabel").style.display = 'none';
+					document.getElementById("nextMoveLabel").style.display = 'none';
+				}
 				
 				var e = document.getElementById("container");
 				e.style.width = halfHexagonX * (gridSize + 1) * 2;
@@ -797,7 +805,6 @@
 					firstTurnAI = false;
 					nextMove("HOVER");
 				}
-				lastColor = h.hexagonOrigColor;
 				
 				var movesHTML = "Moves: " + moves;					
 				var scoreHTML = "Score: " + score;
