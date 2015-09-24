@@ -372,6 +372,18 @@
 						}
 					}
 				}
+				if (hexesLeft == 0) {
+					wrapUp();
+				}
+			}
+			
+			function wrapUp() {
+				document.getElementById("settings").style.display = 'table-row';
+				document.getElementById("firstMove").style.display = 'inline';
+				document.getElementById("nextMove").style.display = 'inline';
+				document.getElementById("firstMoveLabel").innerHTML = "First Move: "
+				document.getElementById("nextMoveLabel").innerHTML = "Next Move: "
+				document.getElementById("container").style.display = 'none';
 			}
 			
 			function checkIfNextColorIsReachable(color) {
@@ -578,6 +590,7 @@
 				document.getElementById("settings").style.display = 'none';
 				document.getElementById("firstMove").style.display = 'none';
 				document.getElementById("nextMove").style.display = 'none';
+				document.getElementById("container").style.display = 'block';
 
 				//grid size, square, from user input before the game
 				var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
