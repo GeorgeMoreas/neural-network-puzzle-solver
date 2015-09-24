@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<script src=https://teikn-js.googlecode.com/svn-history/r23/trunk/libraries/kinetic-v3.6.0.js></script>
+		<script src=https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js></script>
 		<script>	
 			/*****
 			* unbound array of the hexagon object, basically the main object in the game
@@ -20,7 +21,8 @@
 			var hexagon = [];
 
 			//I don't remember what it does, should look it up and update this comment..
-			var movesCounted = "ON";
+			//Found it! It makes sure a move is not double counted, since there are loops involved
+			var movesCounted = "OFF";
 
 			//number of moves used during this game
 			var moves = 0;
@@ -49,6 +51,18 @@
 			
 			//last color clicked, initialized to 'black'
 			var lastColor = colors[colors.length - 1];
+			//current color in hovered state, AI mode only
+			var currentColor = colors[colors.length - 1];
+			
+			//odd glitch first render in new window of shapesLayer.draw() not working
+			var oddGlitch = true;
+			//added to address another odd glitch that won't eliminate last color in
+			//Random mode
+			var hexesLeft = 0;
+			
+			//AI mode selections
+			var firstMode;
+			var nextMode;
 				
 			/*****
 			* unbound array containing all cluster objects
@@ -71,42 +85,7 @@
 			var cluster = [];
 			// is this a human or NPC player
 			var NPC = false;
-			
-			
-			/// write to file
-			var filepath = "file:///Users/admin/Downloads/hexalated_neural.txt";
-			var output = "";
 
-			////////////////////////////////////////////////////
-			/**
-			 * writeTextFile write data to file on hard drive
-			 * @param  string  filepath   Path to file on hard drive
-			 * @param  sring   output     Data to be written
-			 */
-			function writeTextFile(output) {
-				var txtFile = new File(filepath);
-				txtFile.open("w"); //
-				txtFile.writeln(output);
-				txtFile.close();
-			}
-
-			////////////////////////////////////////////////////
-			/**
-			 * readTextFile read data from file
-			 * @param  string   filepath   Path to file on hard drive
-			 * @return string              String with file data
-			 */
-			function readTextFile(/*filepath*/) {
-				var str = "";
-				var txtFile = new File(filepath);
-				txtFile.open("r");
-				while (!txtFile.eof) {
-					// read each line of text
-					str += txtFile.readln() + "\n";
-				}
-				txtFile.close();
-				return str;
-			}
 
 //neural network
 /*			function train(iterations){
@@ -124,22 +103,6 @@
 			}
 */
 
-/*****************************************************************************************
-*
-* //This is where the function that remembers current state of the game will go
-*
-*
-*/
-			function storeState() {
-				var stateOutput = "";
-				
-				for (a = 0; a < hexagon.length; a++) {
-					stateOutput += ", " + hexagon[a].hexagonColor;
-				}
-				
-				alert(stateOutput);
-				//writeTextFile(stateOutput);
-			}
 
 /*****************************************************************************************
 *
@@ -150,7 +113,7 @@
 			function get_number_of_color_remaining(cColor){
 				var count = 0;
 			
-				for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
+				for (var a = 0, cHexagon; cHexagon = hexagon[a]; a++) {
 					if (cHexagon.hexagonColor == cColor) {
 						if (cHexagon.hexagonOn == "ON") {
 							count++;
@@ -351,30 +314,18 @@
 				NPC = true;
 				NewGame();
 				define_clusters();
-				////////////////
-				////////////////////
-				///////////////
-				/////////////////////////
-				////////////////
-				// Make a selector!!
-				//////////////
-				///////////
-				/////
-				////////////
-				//////////////////
-				////////
-				firstMove("MAX_HEX");
+				firstMove();
 			}
 			
 			
-			function firstMove(firstMode){
+			function firstMove(){
 				var nextColor = "";
 				
-				switch (mode) {
+				switch (firstMode) {
 					case "RANDOM":
 						var randomHex = Math.floor(Math.random() * hexagon.length);
 						
-						simulateMouseDown(hexagon[randomHex], true); 
+						simulateMouseDown(hexagon[randomHex]); 
 					break;
 					case "MAX_HEX":
 						var maxSize = 0;
@@ -388,7 +339,7 @@
 						
 						for (var a = 0, h; h = hexagon[a]; a++) {
 							if (h.clusterID == maxCluster){
-								simulateMouseDown(h, true);
+								simulateMouseDown(h);
 							}
 						}			
 					break;
@@ -398,23 +349,63 @@
 						for (var a = 0, h; h = hexagon[a]; a++) {
 							if (h.coordX == gridSizeMiddle) {
 								if (h.coordY == gridSizeMiddle) {
-									simulateMouseDown(h, true);
+									simulateMouseDown(h);
 								}
 							}
 						}
 					break;
 				}
-				//nextMove(mode, "HOVER");
 			}
 			
-			function nextMove(mode, action){
+			function eliminateHovered() {
+				for (var a = 0, h; h = hexagon[a]; a++) {
+					if (h.hoverOn == "ON") {
+						h.hexagonColor = "black";
+						h.hoverOn = "OFF";
+						h.hexagonOn = "OFF";
+						hexesLeft--;
+						if (movesCounted == "OFF") {
+							moves++;
+							movesCounted = "ON";
+							score = moves * scorePerMove >= scoreInitial ? 0 : scoreInitial - scorePerMove * moves;
+						}
+					}
+				}
+			}
+			
+			function checkIfNextColorIsReachable(color) {
+				for (var a = 0, blackHexagon; blackHexagon = hexagon[a]; a++) {
+					if (blackHexagon.hexagonOn == "OFF") {
+						for (var b = 0, cHexagon; cHexagon = hexagon[b]; b++) {	
+							var xCoordOffset = blackHexagon.coordY%2 == 0 ? -1 : 1;
+							
+							if (cHexagon.hexagonColor == color) {
+								if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
+									return true;
+								}
+							}
+						}
+					}
+				}
+				return false;
+			}
+			
+			
+			function nextMove(action){
 				var nextColor = "";
 				 
-				switch (mode) {
+				switch (nextMode) {
 					case "RANDOM":
-						var randomColor = Math.floor(Math.random() * 6);
+						var tryAgain = true;
 						
-						nextColor = colors[randomColor];
+						while (tryAgain) {
+							var randomColor = Math.floor(Math.random() * 7);
+						
+							nextColor = colors[randomColor];
+							if (checkIfNextColorIsReachable(nextColor)) {
+								tryAgain = false;
+							}
+						}
 					break;
 					case "MAX_HEX":
 						var maxCount = 0;
@@ -434,9 +425,13 @@
 						for (var a = 0; a < colors.length - 1; a++) {
 							var currentCount = get_number_of_color_remaining(colors[a]);
 							
-							if (currentCount > mostLeft) {
-								mostLeft = currentCount;
-								nextColor = colors[a];
+							if (colors[a] != lastColor) {
+								if (checkIfNextColorIsReachable(colors[a])) {
+									if (currentCount > mostLeft) {
+										mostLeft = currentCount;
+										nextColor = colors[a];
+									}
+								}
 							}
 						}
 					break;
@@ -457,6 +452,9 @@
 							}
 						}					
 					break;
+					case "LARGEST_CLUSTER":
+						nextColor = get_largest_cluster_color;				
+					break;	
 					case "MOST_CLUSTERS":
 						var mostCluster = 0;
 					
@@ -469,14 +467,11 @@
 							}
 						}					
 					break;
-					case "LARGEST_CLUSTER":
-						nextColor = get_largest_cluster_color;				
-					break;	
 				}
 				for (var a = 0, h; h = hexagon[a]; a++) {
 					if (h.hexagonColor == nextColor){
 						if (action == "CLICK") {
-							simulateMouseDown(h, true);
+							simulateMouseDown(h);
 						}
 						if (action == "HOVER") {
 							simulateMouseOver(h, true);
@@ -510,7 +505,7 @@
 /*****************************************************************************************
 *																
 * Check if there are any hexes of same color that are adjacent 
-*																																//
+*
 */
 
 			function eliminateHexes(vOrigColor, mouseAction){
@@ -522,17 +517,6 @@
 								if (cHexagon.hexagonColor == vOrigColor) {
 									if (hexesAreAdjacent(blackHexagon, cHexagon, xCoordOffset)) {
 									switch (mouseAction) {
-										case "DOWN":
-											cHexagon.hexagonColor = "black";
-											cHexagon.hoverOn = "OFF";
-											cHexagon.hexagonOn = "OFF";
-											repeat = true;
-											if (movesCounted == "OFF") {
-												moves++;
-												movesCounted = "ON";
-												score = moves * scorePerMove >= scoreInitial ? 0 : scoreInitial - scorePerMove * moves;
-											}
-										break;
 										case "OVER":
 											cHexagon.hexagonColor = cHexagon.hexagonColorHover;
 											cHexagon.hoverOn = "ON";
@@ -554,7 +538,6 @@
 						}
 					}
 				}
-				movesCounted = "ON";
 				return repeat;
 			}
 
@@ -592,6 +575,8 @@
 			function NewGame(){
 				//hide settings input once the game begins
 				document.getElementById("settings").style.display = 'none';
+				document.getElementById("firstMove").style.display = 'none';
+				document.getElementById("nextMove").style.display = 'none';
 
 				//grid size, square, from user input before the game
 				var gridSize = parseFloat(document.getElementById("txtGridSizeID").value);//20;	
@@ -609,7 +594,12 @@
 				var imgArray = [];
 				//container for images used for rendering
 				var img = Object;
-
+				
+				firstMode = $( "#firstMove" ).val();
+				nextMode = $( "#nextMove" ).val();
+				document.getElementById("firstMoveLabel").innerHTML = "First Move: " + firstMode
+				document.getElementById("nextMoveLabel").innerHTML = "Next Move: " + nextMode
+				
 				var e = document.getElementById("container");
 				e.style.width = halfHexagonX * (gridSize + 1) * 2;
 				e.style.height = halfHexagonY * (gridSize + 1);
@@ -652,6 +642,7 @@
 
 				for (var m = 0; m < gridSize; m++) {
 					for (var n = 0; n < gridSize; n++) {
+						hexesLeft++;
 						(function(){
 							var i = n;
 							var j = m;
@@ -754,40 +745,26 @@
 					}
 				}		
 				stage.add(shapesLayer);
-				stage.add(messageLayer);  
-				
-				//randomFirstMove(); 
-				storeState();
+				stage.add(messageLayer); 
 			}
 			
 			
 			function simulateMouseOver(h, AIMouseOver) {
-				if (!AIMouseOver) {
-					//do nothing if player is AI
-					//always do else
-					if (NPC) {	
-						//
-					} else {
-						document.body.style.cursor = "pointer";
-					
-						if (h.hexagonOn != "OFF") {
-							var repeat = true;
-				
-							while (repeat == true) {
-								repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
-							}
-						}
-						shapesLayer.draw();	
-					}		
+				//do nothing if player is AI, and there is non-AI hover event
+				//always do else
+				if (NPC && !AIMouseOver) {	
+					//
 				} else {
+					//odd glitch, where shapesLayer.draw() does not work when the game
+					//is played for the first time in a new window, so we call it
+					//again on the first hover event
+					if (oddGlitch) {
+						shapesLayer.draw();
+						oddGlitch = false;
+					}
 					document.body.style.cursor = "pointer";
-					
 					if (h.hexagonOn != "OFF") {
-						var repeat = true;
-			
-						while (repeat == true) {
-							repeat = eliminateHexes(h.hexagonOrigColor, "OVER");	
-						}
+						eliminateHexesInit(h, "OVER")
 					}
 					shapesLayer.draw();	
 				}
@@ -799,62 +776,34 @@
 					//
 				} else {
 					document.body.style.cursor = "default";
-							
-					//if (this.hexagonHover != "OFF") {
-					var repeat = true;
-				
-					while (repeat == true) {
-						repeat = eliminateHexes(h.hexagonOrigColor, "OUT");	
-					} 
-					//}                       	
-				
+					eliminateHexesInit(h, "OUT")
 					shapesLayer.draw();
 				}
 			}
 			
-			function simulateMouseDown(h, AIMouseDown) {
+			function simulateMouseDown(h) {
 				if (firstTurn) {
 					h.hexagonColor = "black";
 					h.hexagonOn = "OFF";
+					hexesLeft--;
+					//this thing is to eliminate multiple hexes on first RANDOM AI turn
+					eliminateHexesInit(h, "OVER")
+					eliminateHovered();
 					firstTurn = false;
 				}  
-				if (!AIMouseDown) {
-					//do nothing if player is AI
-					if (NPC) {
-						//
-					} else {                          	
-						//writeMessage(messageLayer, hexagon.indexOf(this));
-									
-						movesCounted = "OFF";
-					
-						var repeat = true;
-					
-						while (repeat == true) {
-							repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
-						}
-					}
-				} else {
-					movesCounted = "OFF";
-				
-					var repeat = true;
-				
-					while (repeat == true) {
-						repeat = eliminateHexes(h.hexagonOrigColor, "DOWN");	
-					}
-					if (firstTurnAI){
-						firstTurnAI = false;
-						nextMove("MAX_HEX", "HOVER");
-					}
+				movesCounted = "OFF";
+				eliminateHovered();	
+				if (firstTurnAI){
+					firstTurnAI = false;
+					nextMove("HOVER");
 				}
-			
 				lastColor = h.hexagonOrigColor;
-			
+				
 				var movesHTML = "Moves: " + moves;					
 				var scoreHTML = "Score: " + score;
-			
+				
 				document.getElementById("moves").innerHTML=movesHTML;
 				document.getElementById("score").innerHTML=scoreHTML;
-
 				shapesLayer.draw();
 			}
 			
@@ -862,16 +811,26 @@
 			function simulateMouseUp() {
 				//play the next move if player is AI
 				if (NPC) {				
-					nextMove("MAX_HEX", "CLICK");
-					nextMove("MAX_HEX", "HOVER");
+					//nextMove("CLICK");
+					eliminateHovered();
+					if (hexesLeft > 0) {
+						nextMove("HOVER");
+					}
+				} else {
+					//call redraw of the entire canvas on mouse up
+					shapesLayer.draw();
 				}
+			}
+			
+			function eliminateHexesInit(h, mode) {
+				var repeat = true;
 				
-				//call redraw of the entire canvas on mouse up
-				shapesLayer.draw();
+				while (repeat == true) {
+					repeat = eliminateHexes(h.hexagonOrigColor, mode);	
+				}
 			}
 			
 		</script>
-		<style type="text/css"></style>
 	</head>
 	<body bgcolor="black">// onmousedown="return false;">
 		<table border="0" align="center">
@@ -905,28 +864,57 @@
 					<div id="container"></div>
 				</td>
 			</tr>	        
-			<tr>
+			<tr id="settings">
 				<td colspan="2">
 					<p align="center">
 						<font size="2" face="arial" color="aliceblue">
-							<span id="settings">
+							<span>
 								Grid Size:
 								<input type="text" name="txtGridSize" id="txtGridSizeID" value="20" />
 								Hex Size:
 								<input type="text" name="txtHexSize" id="txtHexSizeID" value="15" />
 								<button onclick="NewGame();">Human</button>
 								<button onclick="AINewGame();">AI</button>
-								<select>
-									<option value="RANDOM">Random</option>
-									<option value="MAX_HEX">Most Affected Color</option>
-									<option value="MOST_LEFT">Most Remaining Color</option>
-									<option value="MOST_CENTERED">Most Centered Affected Color</option>
-								</select>
 							</span>
 						</font>
 					</p>
 				</td>
 			</tr>
+			<tr>
+				<td>
+					<p align="center">
+						<font size="2" face="arial" color="aliceblue">
+							<span id="firstMoveLabel">First Move:</span>
+							<select id="firstMove">
+								<option value="RANDOM">Random</option>
+								<option value="MAX_HEX">Most Affected Color</option>
+								<option value="MOST_CENTERED">Most Centered Affected Color</option>
+							</select>
+						</font>
+					</p>
+				</td>
+				<td>
+					<p align="center">
+						<font size="2" face="arial" color="aliceblue">
+							<span id="nextMoveLabel">Next Move:</span>
+							<select id="nextMove">
+								<option value="RANDOM" title="Random">Random</option>
+								<option value="MAX_HEX" title="Most Affected Color">Most Affected Color</option>
+								<option value="MOST_LEFT" title="Most Remaining Color">Most Remaining Color</option>
+								<option value="MOST_CENTERED" title="Most Centered Color">Most Centered Affected Color</option>
+								<option value="LARGEST_CLUSTER" title="Largest Cluster Color">Most Centered Affected Color</option>
+								<option value="MOST_CLUSTERS" title="Most Clusters Color">Most Centered Affected Color</option>
+							</select>
+						</font>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<p align="center">
+					</p>
+				</td>
+			</tr>	
 			<tr>
 				<td colspan="2">
 					<p align="right">
