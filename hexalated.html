@@ -37,6 +37,8 @@
 			var colors = ["red", "orange", "gold", "darkgreen", "lightblue", "mediumblue", "purple", "black"];
 			//string literals of colors used in the game, hover mode
 			var colorsHover = ["coral", "sandybrown", "yellow", "limegreen", "cyan", "dodgerblue", "mediumorchid", "black"];
+			//for circle mode borders
+			var colorsBorder = ["darkred", "saddlebrown", "darkgoldenrod", "darkgreen", "darkslategray", "navy", "indigo", "black"];
 
 			//drawing layer for shapes, needs to be added to stage to get rendered
 			var shapesLayer = new Kinetic.Layer();
@@ -85,6 +87,8 @@
 			var cluster = [];
 			// is this a human or NPC player
 			var NPC = false;
+			//style hexagon or circle
+			var style = "HEX";
 
 
 //neural network
@@ -309,6 +313,13 @@
 				return maxClusterColor;
 			}
 			
+			function NewGameInit() {
+				if (NPC) {
+					AINewGame();
+				} else {
+					NewGame();
+				}
+			}
 			
 			function AINewGame(){
 				NPC = true;
@@ -379,11 +390,14 @@
 			
 			function wrapUp() {
 				document.getElementById("settings").style.display = 'table-row';
-				document.getElementById("firstMove").style.display = 'inline';
-				document.getElementById("nextMove").style.display = 'inline';
+				document.getElementById("firstMove").style.display = 'none';
+				document.getElementById("nextMove").style.display = 'none';
+				document.getElementById("firstMoveLabel").style.display = 'none';
+				document.getElementById("nextMoveLabel").style.display = 'none';
 				document.getElementById("firstMoveLabel").innerHTML = "First Move: "
 				document.getElementById("nextMoveLabel").innerHTML = "Next Move: "
 				document.getElementById("container").style.display = 'none';
+				$( "#player" ).val('HUMAN');
 			}
 			
 			function checkIfNextColorIsReachable(color) {
@@ -698,26 +712,40 @@
 									
 									this.hexagonColor = colors[randomColor];
 									this.hexagonColorHover = colorsHover[randomColor];
+									this.hexagonColorBorder = colorsBorder[randomColor]
 									this.hexagonOrigColor = this.hexagonColor;
 									this.hexagonOn = "ON";
 								}
 								else {
 									this.hexagonColor = colors[7];
 									this.hexagonColorHover = colorsHover[7];
+									this.hexagonColorBorder = colorsBorder[7]
 								}				
 										
 								context.save;
-								
 								context.beginPath();
-								context.lineWidth = 2;
-								context.strokeStyle = this.hexagonOn != "OFF" ? "black" : "indigo";
-								context.moveTo(hexStartX, hexStartY);
-								context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
-								context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY) + hexSideLength);
-								context.lineTo(hexStartX, hexStartY + hexSideLength * Math.cos(hexAngleY) * 2 + hexSideLength);
-								context.lineTo(hexStartX - hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY) + hexSideLength);
-								context.lineTo(hexStartX - hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
-								context.closePath();
+								
+								if (style == "HEX") {
+									context.lineWidth = 2;
+									context.strokeStyle = this.hexagonOn != "OFF" ? "black" : "indigo";
+									context.moveTo(hexStartX, hexStartY);
+									context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
+									context.lineTo(hexStartX + hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY) + hexSideLength);
+									context.lineTo(hexStartX, hexStartY + hexSideLength * Math.cos(hexAngleY) * 2 + hexSideLength);
+									context.lineTo(hexStartX - hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY) + hexSideLength);
+									context.lineTo(hexStartX - hexSideLength * Math.sin(hexAngleX), hexStartY + hexSideLength * Math.cos(hexAngleY));
+									context.closePath();
+								} else {
+									if (this.hexagonOn == "OFF") {
+										context.arc(hexStartX, hexStartY + halfHexagonY / 2 + 2, halfHexagonY / 2, 0, 2 * Math.PI, false);
+										context.lineWidth = 2;
+										context.strokeStyle = "indigo";
+									} else {
+										context.arc(hexStartX, hexStartY + halfHexagonY / 2 + 2, halfHexagonY / 2, 0, 2 * Math.PI, false);
+										context.lineWidth = 2;
+										context.strokeStyle = this.hexagonColorBorder;
+									}
+								}
 								
 								var textureImg = Object;
 								
@@ -730,7 +758,7 @@
 									textureImg = imgArray[7];
 								}
 								clippedBackgroundImage(context, textureImg, halfHexagonX * 2, halfHexagonY * 3 / 2, hexStartX - halfHexagonX, hexStartY, this.hoverOn);
-					
+								
 								////shapesLayer.fill();
 								context.stroke();
 								context.restore();
@@ -850,11 +878,33 @@
 				}
 			}
 			
+			function toggleAISelectors() {
+				var mode = $( "#player" ).val();
+				
+				if (mode == "HUMAN") {
+					document.getElementById("firstMove").style.display = 'none';
+					document.getElementById("firstMoveLabel").style.display = 'none';
+					document.getElementById("nextMove").style.display = 'none';
+					document.getElementById("nextMoveLabel").style.display = 'none';
+					NPC = false;
+				} else {
+					document.getElementById("firstMove").style.display = 'inline';
+					document.getElementById("firstMoveLabel").style.display = 'inline';
+					document.getElementById("nextMove").style.display = 'inline';
+					document.getElementById("nextMoveLabel").style.display = 'inline';
+					NPC = true;
+				}
+			}
+			
+			function toggleStyle() {
+				style = $( "#player" ).val();
+			}
+			
 		</script>
 	</head>
 	<body bgcolor="black">// onmousedown="return false;">
 		<table border="0" align="center">
-			   <tr>
+			<tr>
 				<td colspan="2">
 					<p align="center">
 						<font size="5" face="arial" color="aliceblue">
@@ -864,14 +914,14 @@
 				</td>
 			</tr>	        
 			<tr>
-				<td>
+				<td style="width:200">
 					<p align="center">
 						<font size="2" face="arial" color="aliceblue">
 							<span id="moves">Moves: 0</span>
 						</font>
 					</p>
 				</td>
-				<td>
+				<td style="width:200">
 					<p align="center">
 						<font size="2" face="arial" color="aliceblue">
 							<span id="score">Score: 300</span>
@@ -890,39 +940,58 @@
 						<font size="2" face="arial" color="aliceblue">
 							<span>
 								Grid Size:
-								<input type="text" name="txtGridSize" id="txtGridSizeID" value="20" />
+								<input type="text" name="txtGridSize" id="txtGridSizeID" value="20" style="width:20px;"/>
 								Hex Size:
-								<input type="text" name="txtHexSize" id="txtHexSizeID" value="15" />
-								<button onclick="NewGame();">Human</button>
-								<button onclick="AINewGame();">AI</button>
+								<input type="text" name="txtHexSize" id="txtHexSizeID" value="15" style="width:20px;"/>
+								<select id="style" onchange="toggleStyle()">
+									<option value="HEX">Hexagons</option>
+									<option value="CIR">Circles</option>
+								</select>
+								<select id="player" onchange="toggleAISelectors()">
+									<option value="HUMAN">Human</option>
+									<option value="AI">AI</option>
+								</select>
+								<button onclick="NewGameInit();">Start!</button>
 							</span>
 						</font>
 					</p>
 				</td>
 			</tr>
-			<tr>
-				<td>
-					<p align="center">
+			<tr valign="middle">
+				<td style="width:200">
+					<p align="right">
 						<font size="2" face="arial" color="aliceblue">
-							<span id="firstMoveLabel">First Move:</span>
-							<select id="firstMove">
+							<span id="firstMoveLabel" style="display:none;">First Move:</span>
+						</font>
+					</p>
+				</td>
+				<td style="width:200">	
+					<p align="left">
+						<font size="2" face="arial" color="aliceblue">				
+							<select id="firstMove"style="display:none;">
 								<option value="RANDOM">Random</option>
 								<option value="MAX_HEX">Most Affected Color</option>
-								<option value="MOST_LEFT">Most Remaining Color (pending)</option>
 								<option value="MOST_CENTERED">Most Centered Hexagon</option>
 							</select>
 						</font>
 					</p>
 				</td>
-				<td>
-					<p align="center">
+			</tr>
+			<tr valign="middle">
+				<td style="width:200">
+					<p align="right">
 						<font size="2" face="arial" color="aliceblue">
-							<span id="nextMoveLabel">Next Move:</span>
-							<select id="nextMove">
+							<span id="nextMoveLabel"style="display:none;">Next Move:</span>
+						</font>
+					</p>
+				</td>
+				<td style="width:200">
+					<p align="left">
+						<font size="2" face="arial" color="aliceblue">
+							<select id="nextMove"style="display:none;">
 								<option value="RANDOM" title="Random">Random</option>
 								<option value="MAX_HEX" title="Most Affected Color">Most Affected Color</option>
 								<option value="MOST_LEFT" title="Most Remaining Color">Most Remaining Color</option>
-								<option value="MOST_CENTERED" title="Most Centered Color">Most Centered Color (pending)</option>
 							</select>
 						</font>
 					</p>
