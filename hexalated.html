@@ -107,6 +107,41 @@
 			}
 */
 
+/*
+
+turn 1: click any color
+		action(click, color)
+		
+turn n: click any color, that has not already been clicked
+		action(click, color)
+			where
+				color != last color
+				
+Fully observable vs. partially observable
+	Easy: Fully observable
+	Hard: Partially observable (this + next n moves)
+
+Deterministic vs. stochastic vs. strategic
+	Easy: Deterministic
+	Hard: Remaining hexes randomize after each turn?
+	
+Episodic vs. sequential
+	Easy: Sequential
+	Hard: Episodic (either due to partial observation or stochastic randomization)
+
+Static vs. dynamic vs. semi-dynamic
+	Easy: Static
+	Hard: Semi-dynamic (timed, score drops as time passes or with each iteration of the next turn determination)
+
+Discrete vs. continuous
+	Discrete
+	
+Single agent vs. multiagent
+	Single agent
+
+
+*/
+
 
 /*****************************************************************************************
 *
